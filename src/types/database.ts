@@ -21,7 +21,7 @@ export interface Race {
   false_fav_reason: string | null;
   probable_winner_box: number | null;
   probable_winner_name: string | null;
-  probable_winner_win_pct: number | null;
+  probable_winner_win_pct: number | string | null;
   created_at: string;
 }
 
@@ -31,9 +31,9 @@ export interface Runner {
   box: number;
   name: string;
   trainer: string | null;
-  price: number | null;
-  win_pct: number | null;
-  top4_pct: number | null;
+  price: number | string | null;
+  win_pct: number | string | null;
+  top4_pct: number | string | null;
   is_false_fav: boolean;
 }
 

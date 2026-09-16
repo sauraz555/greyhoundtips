@@ -62,7 +62,17 @@ export function confidenceBadge(confidence: string | null): { label: string; cla
   }
 }
 
-export function useNow(): Date {
-  // This is a hook stub — actual ticking is handled by the component
-  return new Date();
+export function toNum(val: number | string | null | undefined): number {
+  if (val == null) return 0;
+  return typeof val === 'string' ? parseFloat(val) : val;
+}
+
+export function fmtPct(val: number | string | null | undefined, digits = 1): string {
+  if (val == null) return '—';
+  return `${toNum(val).toFixed(digits)}%`;
+}
+
+export function fmtPrice(val: number | string | null | undefined): string {
+  if (val == null) return '—';
+  return `$${toNum(val).toFixed(2)}`;
 }

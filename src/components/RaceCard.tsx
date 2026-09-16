@@ -8,6 +8,9 @@ import {
   formatPostTime,
   confidenceColor,
   confidenceBadge,
+  toNum,
+  fmtPct,
+  fmtPrice,
   type RaceStatus,
 } from '@/lib/raceUtils';
 import RunnerTable from './RunnerTable';
@@ -39,13 +42,17 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
   const cardOpacity = isFinished ? 'opacity-40' : '';
   const borderClass = confidenceColor(race.confidence);
 
-  const sortedRunners = [...runners].sort((a, b) => (b.win_pct ?? 0) - (a.win_pct ?? 0));
+  const winnerPct = toNum(race.probable_winner_win_pct);
+
+  const sortedRunners = [...runners].sort((a, b) => toNum(b.win_pct) - toNum(a.win_pct));
   const top3 = sortedRunners.slice(0, 3);
 
-  // Exotic suggestions: group by top4 probability tiers
   const exoticTiers = [
-    { label: 'Key Runners (Top 4 %)', runners: sortedRunners.filter((r) => (r.top4_pct ?? 0) >= 60) },
-    { label: 'Value Options (Win % 10-25)', runners: sortedRunners.filter((r) => (r.win_pct ?? 0) >= 10 && (r.win_pct ?? 0) <= 25) },
+    { label: 'Key Runners (Top 4 %)', runners: sortedRunners.filter((r) => toNum(r.top4_pct) >= 60) },
+    { label: 'Value Options (Win % 10-25)', runners: sortedRunners.filter((r) => {
+      const w = toNum(r.win_pct);
+      return w >= 10 && w <= 25;
+    }) },
     { label: 'Trifecta Combinations', runners: sortedRunners.slice(0, 4) },
   ];
 
@@ -85,7 +92,7 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
               <span className="truncate font-semibold text-ink-900">{race.probable_winner_name}</span>
               {race.probable_winner_win_pct != null && (
                 <span className="mono text-sm font-bold text-amber-600">
-                  {race.probable_winner_win_pct.toFixed(1)}%
+                  {fmtPct(race.probable_winner_win_pct)}
                 </span>
               )}
             </div>
@@ -94,7 +101,7 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
             <div className="mt-1 h-1.5 w-full max-w-[200px] overflow-hidden rounded-full bg-ink-100">
               <div
                 className="h-full rounded-full bg-amber-500 transition-all"
-                style={{ width: `${race.probable_winner_win_pct}%` }}
+                style={{ width: `${winnerPct}%` }}
               />
             </div>
           )}
@@ -192,7 +199,7 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
                   <div className="flex-1 min-w-0">
                     <div className="truncate text-sm font-medium text-ink-900">{r.name}</div>
                     <div className="mono text-xs text-ink-500">
-                      {r.win_pct?.toFixed(1)}% · ${r.price?.toFixed(2)}
+                      {fmtPct(r.win_pct)} · {fmtPrice(r.price)}
                     </div>
                   </div>
                   {idx === 0 && (
@@ -237,7 +244,7 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
                           <span className="font-bold text-ink-900">B{r.box}</span>
                           <span className="text-ink-600">{r.name}</span>
                           <span className="text-ink-400">
-                            {tier.label.includes('Top 4') ? `${r.top4_pct?.toFixed(0)}%` : `${r.win_pct?.toFixed(0)}%`}
+                            {tier.label.includes('Top 4') ? fmtPct(r.top4_pct, 0) : fmtPct(r.win_pct, 0)}
                           </span>
                         </span>
                       ))}

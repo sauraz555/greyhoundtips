@@ -1,4 +1,5 @@
 import type { Runner } from '@/types/database';
+import { toNum, fmtPct, fmtPrice } from '@/lib/raceUtils';
 
 interface Props {
   runners: Runner[];
@@ -43,23 +44,23 @@ export default function RunnerTable({ runners }: Props) {
               </td>
               <td className="py-2.5 pr-3 text-ink-500">{r.trainer ?? '—'}</td>
               <td className="mono py-2.5 pr-3 text-right text-ink-700">
-                {r.price != null ? `$${r.price.toFixed(2)}` : '—'}
+                {fmtPrice(r.price)}
               </td>
               <td className="mono py-2.5 pr-3 text-right">
                 <div className="flex items-center justify-end gap-2">
                   <div className="h-1.5 w-16 overflow-hidden rounded-full bg-ink-100">
                     <div
                       className="h-full rounded-full bg-amber-500"
-                      style={{ width: `${r.win_pct ?? 0}%` }}
+                      style={{ width: `${toNum(r.win_pct)}%` }}
                     />
                   </div>
                   <span className="w-10 text-right text-ink-700">
-                    {r.win_pct != null ? `${r.win_pct.toFixed(1)}%` : '—'}
+                    {fmtPct(r.win_pct)}
                   </span>
                 </div>
               </td>
               <td className="mono py-2.5 text-right text-ink-500">
-                {r.top4_pct != null ? `${r.top4_pct.toFixed(1)}%` : '—'}
+                {fmtPct(r.top4_pct)}
               </td>
             </tr>
           ))}
