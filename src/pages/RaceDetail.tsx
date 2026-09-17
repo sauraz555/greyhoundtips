@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, AlertCircle, MapPin } from 'lucide-react';
+import { ArrowLeft, AlertCircle, MapPin, PawPrint } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { Race, Runner, Meeting } from '@/types/database';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import RaceCard from '@/components/RaceCard';
+
+const HERO_IMG = 'https://images.pexels.com/photos/28506513/pexels-photo-28506513.jpeg?auto=compress&cs=tinysrgb&w=1600';
 
 export default function RaceDetail() {
   const { id } = useParams<{ id: string }>();
@@ -57,15 +59,23 @@ export default function RaceDetail() {
     <div className="flex min-h-screen flex-col bg-ink-50">
       <Nav />
 
+      {/* Hero banner */}
+      <div className="relative h-32 overflow-hidden sm:h-40">
+        <img src={HERO_IMG} alt="Greyhound" className="h-full w-full object-cover" />
+        <div className="absolute inset-0 hero-overlay" />
+        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-b from-transparent to-ink-50" />
+      </div>
+
       <div className="mx-auto w-full max-w-4xl flex-1 px-4 py-6">
-        <Link to="/dashboard" className="btn-ghost mb-4 -ml-2 text-sm">
-          <ArrowLeft className="h-4 w-4" />
+        <Link to="/dashboard" className="btn-ghost mb-4 -ml-2 text-sm group">
+          <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
           Back to dashboard
         </Link>
 
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-ink-300 border-t-amber-500" />
+          <div className="flex flex-col items-center justify-center py-20 gap-3">
+            <div className="h-10 w-10 animate-spin rounded-full border-2 border-ink-200 border-t-amber-500" />
+            <p className="text-sm text-ink-400">Loading race...</p>
           </div>
         ) : error ? (
           <div className="card border-red-200 p-8 text-center">
@@ -76,8 +86,10 @@ export default function RaceDetail() {
         ) : race ? (
           <>
             {meeting && (
-              <div className="mb-4 flex items-center gap-2 text-sm text-ink-500">
-                <MapPin className="h-4 w-4" />
+              <div className="mb-4 flex items-center gap-2 text-sm text-ink-500 animate-fadeIn">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100">
+                  <MapPin className="h-4 w-4 text-amber-600" />
+                </div>
                 <span className="font-medium text-ink-700">{meeting.venue_name}</span>
                 <span className="text-ink-300">·</span>
                 <span>{meeting.state}</span>
@@ -86,10 +98,12 @@ export default function RaceDetail() {
               </div>
             )}
 
-            <RaceCard race={race} runners={runners} defaultExpanded={true} />
+            <div className="animate-fadeInUp">
+              <RaceCard race={race} runners={runners} defaultExpanded={true} />
+            </div>
 
             {/* Disclaimer */}
-            <div className="mt-6 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+            <div className="mt-6 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 animate-fadeIn">
               <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
               <span>
                 <span className="font-semibold">Model output — not financial or betting advice.</span>{' '}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronDown, ChevronRight, AlertTriangle, ExternalLink, Clock, Layers } from 'lucide-react';
+import { ChevronDown, ChevronRight, AlertTriangle, ExternalLink, Clock, Layers, Zap, TrendingUp } from 'lucide-react';
 import type { Race, Runner } from '@/types/database';
 import {
   getRaceStatus,
@@ -25,10 +25,16 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [showExotics, setShowExotics] = useState(false);
   const [now, setNow] = useState(new Date());
+  const [barAnimated, setBarAnimated] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const t = setTimeout(() => setBarAnimated(true), 100);
+    return () => clearTimeout(t);
   }, []);
 
   const status: RaceStatus = getRaceStatus(race.start_time, now);
@@ -41,7 +47,6 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
 
   const cardOpacity = isFinished ? 'opacity-40' : '';
   const borderClass = confidenceColor(race.confidence);
-
   const winnerPct = toNum(race.probable_winner_win_pct);
 
   const sortedRunners = [...runners].sort((a, b) => toNum(b.win_pct) - toNum(a.win_pct));
@@ -56,16 +61,22 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
     { label: 'Trifecta Combinations', runners: sortedRunners.slice(0, 4) },
   ];
 
+  const statusGlow = isStartingSoon
+    ? 'shadow-lg shadow-amber-500/10 ring-1 ring-amber-300/30'
+    : isInProgress
+      ? 'shadow-lg shadow-green-500/10 ring-1 ring-green-300/30'
+      : '';
+
   return (
     <div
-      className={`card border-l-4 ${borderClass} ${cardOpacity} transition-opacity`}
+      className={`card border-l-4 ${borderClass} ${cardOpacity} ${statusGlow} card-hover transition-all duration-300`}
     >
       {/* Header row — always visible */}
       <button
         onClick={() => setExpanded(!expanded)}
         className="flex w-full items-center gap-3 p-4 text-left"
       >
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 transition-transform duration-200" style={{ transform: expanded ? 'rotate(0deg)' : 'rotate(0deg)' }}>
           {expanded ? (
             <ChevronDown className="h-5 w-5 text-ink-400" />
           ) : (
@@ -86,7 +97,7 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
         <div className="ml-2 flex-1 min-w-0">
           {race.probable_winner_name && (
             <div className="flex items-center gap-2">
-              <span className="mono inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded bg-ink-900 text-xs font-bold text-ink-50">
+              <span className="mono inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded bg-ink-900 text-xs font-bold text-ink-50 transition-transform hover:scale-110">
                 {race.probable_winner_box}
               </span>
               <span className="truncate font-semibold text-ink-900">{race.probable_winner_name}</span>
@@ -100,8 +111,8 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
           {race.probable_winner_win_pct != null && (
             <div className="mt-1 h-1.5 w-full max-w-[200px] overflow-hidden rounded-full bg-ink-100">
               <div
-                className="h-full rounded-full bg-amber-500 transition-all"
-                style={{ width: `${winnerPct}%` }}
+                className="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-500 transition-all duration-700 ease-out"
+                style={{ width: barAnimated ? `${winnerPct}%` : '0%' }}
               />
             </div>
           )}
@@ -117,7 +128,7 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
         {/* Timer */}
         <div className="flex-shrink-0 text-right">
           <div
-            className={`mono text-sm font-semibold ${
+            className={`mono text-sm font-semibold transition-colors ${
               isStartingSoon
                 ? 'text-amber-600 animate-pulseSubtle'
                 : isInProgress
@@ -136,19 +147,20 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
       {/* Tags row */}
       <div className="flex flex-wrap items-center gap-2 px-4 pb-3">
         {race.false_fav_flag && (
-          <span className="badge inline-flex items-center gap-1 bg-amber-100 text-amber-700">
+          <span className="badge inline-flex items-center gap-1 bg-amber-100 text-amber-700 animate-scaleIn">
             <AlertTriangle className="h-3 w-3" />
             False Favourite
           </span>
         )}
         {isStartingSoon && (
-          <span className="badge bg-amber-50 text-amber-600">
+          <span className="badge bg-amber-50 text-amber-600 animate-scaleIn">
             <Clock className="h-3 w-3" />
             Jumping Soon
           </span>
         )}
         {isInProgress && (
-          <span className="badge bg-green-50 text-green-600">
+          <span className="badge bg-green-50 text-green-600 animate-scaleIn">
+            <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulseSubtle" />
             In Progress
           </span>
         )}
@@ -159,9 +171,9 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
         )}
         <Link
           to={`/race/${race.id}`}
-          className="btn-ghost ml-auto text-xs"
+          className="btn-ghost ml-auto text-xs group"
         >
-          <ExternalLink className="h-3 w-3" />
+          <ExternalLink className="h-3 w-3 transition-transform group-hover:scale-110" />
           Open
         </Link>
       </div>
@@ -171,7 +183,7 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
         <div className="animate-slideDown border-t border-ink-100 px-4 py-4">
           {/* False fav reason */}
           {race.false_fav_flag && race.false_fav_reason && (
-            <div className="mb-4 flex items-start gap-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
+            <div className="mb-4 flex items-start gap-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-800 animate-fadeIn border border-amber-200">
               <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
               <span>
                 <span className="font-semibold">False Favourite Flag: </span>
@@ -182,15 +194,16 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
 
           {/* Top 3 quick view */}
           <div className="mb-4">
-            <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400">
+            <h4 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-400">
+              <TrendingUp className="h-3.5 w-3.5" />
               Model Top 3
             </h4>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               {top3.map((r, idx) => (
                 <div
                   key={r.id}
-                  className={`flex items-center gap-2 rounded-lg border p-2 ${
-                    idx === 0 ? 'border-amber-300 bg-amber-50' : 'border-ink-200 bg-ink-50'
+                  className={`flex items-center gap-2 rounded-lg border p-2.5 transition-all hover:shadow-sm animate-fadeInUp stagger-${idx + 1} ${
+                    idx === 0 ? 'border-amber-300 bg-amber-50 shadow-sm' : 'border-ink-200 bg-ink-50'
                   }`}
                 >
                   <span className="mono inline-flex h-6 w-6 items-center justify-center rounded bg-ink-900 text-xs font-bold text-ink-50">
@@ -203,7 +216,7 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
                     </div>
                   </div>
                   {idx === 0 && (
-                    <span className="text-xs font-bold text-amber-600">PICK</span>
+                    <span className="text-xs font-bold text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded">PICK</span>
                   )}
                 </div>
               ))}
@@ -222,24 +235,27 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
           <div className="border-t border-ink-100 pt-3">
             <button
               onClick={() => setShowExotics(!showExotics)}
-              className="flex items-center gap-2 text-sm font-semibold text-ink-600 transition-colors hover:text-ink-900"
+              className="group flex items-center gap-2 text-sm font-semibold text-ink-600 transition-colors hover:text-ink-900"
             >
-              <Layers className="h-4 w-4" />
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-ink-100 group-hover:bg-amber-100 transition-colors">
+                <Layers className="h-4 w-4" />
+              </div>
               Exotic Bet Suggestions
               {showExotics ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
             </button>
             {showExotics && (
               <div className="animate-slideDown mt-3 space-y-3">
-                {exoticTiers.map((tier) => (
-                  <div key={tier.label} className="rounded-lg bg-ink-50 p-3">
-                    <h5 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400">
+                {exoticTiers.map((tier, tIdx) => (
+                  <div key={tier.label} className={`rounded-lg bg-ink-50 p-3 border border-ink-100 animate-fadeInUp stagger-${tIdx + 1}`}>
+                    <h5 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-400">
+                      <Zap className="h-3 w-3 text-amber-500" />
                       {tier.label}
                     </h5>
                     <div className="flex flex-wrap gap-1.5">
                       {tier.runners.map((r) => (
                         <span
                           key={r.id}
-                          className="mono inline-flex items-center gap-1 rounded-md border border-ink-200 bg-white px-2 py-1 text-xs"
+                          className="mono inline-flex items-center gap-1 rounded-md border border-ink-200 bg-white px-2 py-1 text-xs transition-all hover:border-amber-300 hover:shadow-sm"
                         >
                           <span className="font-bold text-ink-900">B{r.box}</span>
                           <span className="text-ink-600">{r.name}</span>
