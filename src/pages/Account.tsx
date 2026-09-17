@@ -26,12 +26,18 @@ export default function Account() {
     }
 
     // Delete profile row, then sign out. Auth user deletion requires service role.
-    const { error: profileError } = await supabase
+    if (!user?.id) {
+      setError('Could not delete profile. Please try again.');
+      return;
+    }
+
+    const { data: deleted, error: profileError } = await supabase
       .from('profiles')
       .delete()
-      .eq('id', user?.id);
+      .eq('id', user.id)
+      .select('id');
 
-    if (profileError) {
+    if (profileError || !deleted || deleted.length === 0) {
       setError('Could not delete profile. Please try again.');
       return;
     }

@@ -35,7 +35,18 @@ export default function Signup() {
     });
 
     if (signUpError) {
-      setError(signUpError.message);
+      const code = signUpError.message.toLowerCase();
+      if (code.includes('already') || code.includes('exists') || code.includes('registered')) {
+        // Do not confirm whether an address already has an account.
+        navigate('/login', {
+          state: {
+            message:
+              'Check your inbox to finish setting up your account, then log in below.',
+          },
+        });
+        return;
+      }
+      setError('Could not create your account. Please check your details and try again.');
       setLoading(false);
       return;
     }
@@ -43,7 +54,11 @@ export default function Signup() {
     if (data.session) {
       navigate('/dashboard');
     } else {
-      navigate('/login', { state: { message: 'Account created. Please log in.' } });
+      navigate('/login', {
+        state: {
+          message: 'Check your inbox to finish setting up your account, then log in below.',
+        },
+      });
     }
     setLoading(false);
   };
