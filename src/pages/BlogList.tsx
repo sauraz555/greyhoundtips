@@ -34,8 +34,8 @@ export default function BlogList() {
             THE <span className="text-gradient-amber">SCIENCE</span> BEHIND THE MODEL
           </h1>
           <p className="mt-3 max-w-2xl mx-auto text-ink-600">
-            Technical deep-dives into the data pipelines, machine learning architectures, and
-            quantitative methods that power Greyhound Edge's race predictions.
+            Deep-dives into the history, breeding, track architecture, and quantitative methods
+            that power Australian greyhound racing and the Greyhound Edge model.
           </p>
         </div>
 
