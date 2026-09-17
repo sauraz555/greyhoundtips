@@ -7,6 +7,7 @@ import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import RaceCard from '@/components/RaceCard';
 import ModelStatus from '@/components/ModelStatus';
+import ModelInsights from '@/components/ModelInsights';
 
 const HERO_IMG = 'https://images.pexels.com/photos/28506513/pexels-photo-28506513.jpeg?auto=compress&cs=tinysrgb&w=1600';
 
@@ -109,7 +110,12 @@ export default function RaceDetail() {
               <ModelStatus />
             </div>
 
-            <div className="animate-fadeInUp stagger-1">
+            {/* Model insights for this race */}
+            <div className="mb-4 animate-fadeInUp stagger-1">
+              <ModelInsights races={race ? [race] : []} runners={runners.length > 0 ? { [race!.id]: runners } : {}} />
+            </div>
+
+            <div className="animate-fadeInUp stagger-2">
               <RaceCard race={race} runners={runners} defaultExpanded={true} />
             </div>
 

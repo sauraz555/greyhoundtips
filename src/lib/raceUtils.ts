@@ -1,5 +1,13 @@
 export type RaceStatus = 'upcoming' | 'starting-soon' | 'in-progress' | 'finished';
 
+export function getAESTDate(date: Date = new Date()): string {
+  const aestTime = new Date(date.toLocaleString('en-US', { timeZone: 'Australia/Sydney' }));
+  const year = aestTime.getFullYear();
+  const month = String(aestTime.getMonth() + 1).padStart(2, '0');
+  const day = String(aestTime.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 export function getRaceStatus(startTime: string, now: Date): RaceStatus {
   const start = new Date(startTime).getTime();
   const diff = start - now.getTime();

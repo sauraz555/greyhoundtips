@@ -5,11 +5,12 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { Meeting, Race, Runner } from '@/types/database';
-import { getRaceStatus, toNum } from '@/lib/raceUtils';
+import { getRaceStatus, toNum, getAESTDate } from '@/lib/raceUtils';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import RaceCard from '@/components/RaceCard';
 import ModelStatus from '@/components/ModelStatus';
+import ModelInsights from '@/components/ModelInsights';
 
 type FilterType = 'all' | 'soon' | 'falsefav';
 const REFRESH_INTERVAL = 60_000;
@@ -103,6 +104,8 @@ export default function Dashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const [activeDate, setActiveDate] = useState<string>('');
+
   useEffect(() => {
     const interval = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(interval);
@@ -113,12 +116,13 @@ export default function Dashboard() {
     else setRefreshing(true);
     setError(null);
 
-    const today = new Date().toISOString().split('T')[0];
+    // Use AEST date, not UTC
+    const aestDate = getAESTDate();
 
     const { data: meetingData, error: meetingError } = await supabase
       .from('meetings')
       .select('*')
-      .eq('date', today)
+      .eq('date', aestDate)
       .order('venue_name');
 
     if (meetingError) {
@@ -128,7 +132,40 @@ export default function Dashboard() {
       return;
     }
 
-    const meetingIds = (meetingData ?? []).map((m) => m.id);
+    let effectiveMeetings: Meeting[] = meetingData as Meeting[] ?? [];
+
+    // Fallback: if no meetings for today, find the next available date
+    if ((meetingData ?? []).length === 0) {
+      const { data: futureMeetings } = await supabase
+        .from('meetings')
+        .select('*')
+        .gte('date', aestDate)
+        .order('date')
+        .limit(1);
+
+      if (futureMeetings && futureMeetings.length > 0) {
+        const nextDate = (futureMeetings[0] as Meeting).date;
+        setActiveDate(nextDate);
+        const { data: nextMeetingData } = await supabase
+          .from('meetings')
+          .select('*')
+          .eq('date', nextDate)
+          .order('venue_name');
+        effectiveMeetings = (nextMeetingData ?? []) as Meeting[];
+      } else {
+        setMeetings([]);
+        setRaces([]);
+        setRunners({});
+        setLoading(false);
+        setRefreshing(false);
+        setLastRefresh(new Date());
+        return;
+      }
+    } else {
+      setActiveDate(aestDate);
+    }
+
+    const meetingIds = (effectiveMeetings ?? []).map((m) => m.id);
     if (meetingIds.length === 0) {
       setMeetings([]);
       setRaces([]);
@@ -169,7 +206,7 @@ export default function Dashboard() {
       }, {} as Record<string, Runner[]>);
     }
 
-    setMeetings(meetingData as Meeting[]);
+    setMeetings(effectiveMeetings as Meeting[]);
     setRaces(raceData as Race[]);
     setRunners(runnerMap);
     setLoading(false);
@@ -230,12 +267,19 @@ export default function Dashboard() {
     });
   };
 
-  const todayDate = new Date().toLocaleDateString('en-AU', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
+  const displayDate = activeDate && activeDate !== getAESTDate()
+    ? new Date(activeDate + 'T00:00:00').toLocaleDateString('en-AU', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      })
+    : new Date().toLocaleDateString('en-AU', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
 
   return (
     <div className="flex min-h-screen flex-col bg-ink-50">
@@ -251,7 +295,7 @@ export default function Dashboard() {
         <div className="relative mx-auto flex h-full max-w-6xl flex-col justify-center px-4">
           <div className="flex items-center gap-2 text-amber-400 mb-1 animate-fadeIn">
             <Calendar className="h-4 w-4" />
-            <span className="mono text-sm font-medium">{todayDate}</span>
+            <span className="mono text-sm font-medium">{displayDate}</span>
           </div>
           <h1 className="font-display text-3xl tracking-wide text-ink-50 sm:text-5xl animate-fadeInUp">
             TODAY'S RACES
@@ -379,6 +423,13 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Model insights — edge detection */}
+        {!loading && totalRaces > 0 && (
+          <div className="mb-6 animate-fadeInUp stagger-2">
+            <ModelInsights races={races} runners={runners} />
           </div>
         )}
 
