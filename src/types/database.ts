@@ -45,16 +45,15 @@ export interface Profile {
 }
 
 export interface Subscription {
-  id: string;
-  user_id: string;
-  stripe_customer_id: string | null;
-  stripe_subscription_id: string | null;
+  customer_id: string;
+  subscription_id: string | null;
   status: string;
   trial_end: string | null;
   current_period_end: string | null;
   cancel_at_period_end: boolean;
-  created_at: string;
-  updated_at: string;
+  price_id: string | null;
+  payment_method_brand: string | null;
+  payment_method_last4: string | null;
 }
 
 export interface MeetingWithRaces extends Meeting {

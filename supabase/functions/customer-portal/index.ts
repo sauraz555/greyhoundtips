@@ -1,5 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.4";
-import Stripe from "npm:stripe@14.25.0";
+import Stripe from "npm:stripe@17.7.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,16 +9,7 @@ const corsHeaders = {
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL");
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-
-async function getConfig(supabase: ReturnType<typeof createClient>, key: string): Promise<string> {
-  const { data, error } = await supabase
-    .from("app_config")
-    .select("value")
-    .eq("key", key)
-    .maybeSingle();
-  if (error || !data) throw new Error(`Missing config: ${key}`);
-  return data.value;
-}
+const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY")!;
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
@@ -49,29 +40,28 @@ Deno.serve(async (req: Request) => {
 
     const user = userData.user;
 
-    const { data: sub } = await supabase
-      .from("subscriptions")
-      .select("stripe_customer_id")
+    const { data: customer } = await supabase
+      .from("stripe_customers")
+      .select("customer_id")
       .eq("user_id", user.id)
+      .is("deleted_at", null)
       .maybeSingle();
 
-    if (!sub?.stripe_customer_id) {
+    if (!customer?.customer_id) {
       return new Response(JSON.stringify({ error: "No subscription found" }), {
         status: 404,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const stripeSecretKey = await getConfig(supabase, "stripe_secret_key");
-    const siteUrl = await getConfig(supabase, "site_url");
-
     const stripe = new Stripe(stripeSecretKey, {
-      apiVersion: "2025-03-31.basil" as any,
-      httpClient: Stripe.createFetchHttpClient(),
+      appInfo: { name: "Bolt Integration", version: "1.0.0" },
     });
 
+    const siteUrl = Deno.env.get("SITE_URL") ?? "https://greyhoundpredictor.org";
+
     const session = await stripe.billingPortal.sessions.create({
-      customer: sub.stripe_customer_id,
+      customer: customer.customer_id,
       return_url: `${siteUrl}/account`,
     });
 

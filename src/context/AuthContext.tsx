@@ -65,9 +65,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!cancelled) setProfile(profileData as Profile | null);
 
       const { data: subData } = await supabase
-        .from('subscriptions')
+        .from('stripe_user_subscriptions')
         .select('*')
-        .eq('user_id', user.id)
         .maybeSingle();
       if (!cancelled) {
         setSubscription(subData as Subscription | null);
@@ -90,9 +89,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshSubscription = async () => {
     if (!user) return;
     const { data } = await supabase
-      .from('subscriptions')
+      .from('stripe_user_subscriptions')
       .select('*')
-      .eq('user_id', user.id)
       .maybeSingle();
     setSubscription(data as Subscription | null);
   };

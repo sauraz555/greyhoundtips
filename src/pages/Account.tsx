@@ -87,11 +87,11 @@ export default function Account() {
   };
 
   const isActive = subscription?.status === 'trialing' || subscription?.status === 'active' || subscription?.status === 'past_due';
-  const trialEnd = subscription?.trial_end ? new Date(subscription.trial_end) : null;
+  const trialEnd = subscription?.trial_end ? new Date(Number(subscription.trial_end) * 1000) : null;
   const daysLeft = trialEnd
     ? Math.max(0, Math.ceil((trialEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
     : 0;
-  const periodEnd = subscription?.current_period_end ? new Date(subscription.current_period_end) : null;
+  const periodEnd = subscription?.current_period_end ? new Date(Number(subscription.current_period_end) * 1000) : null;
 
   return (
     <div className="flex min-h-screen flex-col bg-ink-50">

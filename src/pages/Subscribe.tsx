@@ -30,14 +30,19 @@ export default function Subscribe() {
         return;
       }
 
-      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout`;
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`;
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ priceId: PRICE_ID }),
+        body: JSON.stringify({
+          price_id: PRICE_ID,
+          success_url: `${window.location.origin}/dashboard?checkout=success`,
+          cancel_url: `${window.location.origin}/subscribe?checkout=cancelled`,
+          mode: 'subscription',
+        }),
       });
 
       if (!response.ok) {
@@ -58,7 +63,7 @@ export default function Subscribe() {
     }
   };
 
-  const trialEnd = subscription?.trial_end ? new Date(subscription.trial_end) : null;
+  const trialEnd = subscription?.trial_end ? new Date(Number(subscription.trial_end) * 1000) : null;
   const daysLeft = trialEnd
     ? Math.max(0, Math.ceil((trialEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
     : 0;

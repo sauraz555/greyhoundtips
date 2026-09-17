@@ -31,11 +31,10 @@ export default function Login() {
 
     if (data.session) {
       const { data: subData } = await supabase
-        .from('subscriptions')
-        .select('status')
-        .eq('user_id', data.session.user.id)
+        .from('stripe_user_subscriptions')
+        .select('subscription_status')
         .maybeSingle();
-      const status = subData?.status;
+      const status = subData?.subscription_status;
       if (status === 'trialing' || status === 'active' || status === 'past_due') {
         navigate('/dashboard');
       } else {

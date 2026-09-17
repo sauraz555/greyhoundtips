@@ -1,0 +1,2 @@
+ALTER TABLE stripe_subscriptions
+  ADD COLUMN IF NOT EXISTS trial_end bigint DEFAULT NULL;
