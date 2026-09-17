@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, AlertCircle, MapPin, PawPrint } from 'lucide-react';
+import { ArrowLeft, AlertCircle, MapPin, Cpu } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { Race, Runner, Meeting } from '@/types/database';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import RaceCard from '@/components/RaceCard';
+import ModelStatus from '@/components/ModelStatus';
 
 const HERO_IMG = 'https://images.pexels.com/photos/28506513/pexels-photo-28506513.jpeg?auto=compress&cs=tinysrgb&w=1600';
 
@@ -73,9 +74,14 @@ export default function RaceDetail() {
         </Link>
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-3">
-            <div className="h-10 w-10 animate-spin rounded-full border-2 border-ink-200 border-t-amber-500" />
-            <p className="text-sm text-ink-400">Loading race...</p>
+          <div className="flex flex-col items-center justify-center py-20 gap-4">
+            <div className="relative">
+              <div className="h-16 w-16 animate-spin rounded-full border-2 border-ink-200 border-t-amber-500" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Cpu className="h-6 w-6 text-amber-500 animate-pulseSubtle" />
+              </div>
+            </div>
+            <p className="font-display text-sm tracking-wide text-ink-700">LOADING RACE ANALYSIS</p>
           </div>
         ) : error ? (
           <div className="card border-red-200 p-8 text-center">
@@ -98,7 +104,12 @@ export default function RaceDetail() {
               </div>
             )}
 
-            <div className="animate-fadeInUp">
+            {/* Model pipeline for this race */}
+            <div className="mb-4 animate-fadeInUp">
+              <ModelStatus />
+            </div>
+
+            <div className="animate-fadeInUp stagger-1">
               <RaceCard race={race} runners={runners} defaultExpanded={true} />
             </div>
 

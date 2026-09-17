@@ -1,11 +1,15 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
-import { ChevronDown, ChevronRight, AlertCircle, Filter, RefreshCw, MapPin, Radio, Activity, AlertTriangle, TrendingUp, Calendar, Flame, Zap } from 'lucide-react';
+import {
+  ChevronDown, ChevronRight, AlertCircle, Filter, RefreshCw, MapPin, Radio,
+  Activity, AlertTriangle, TrendingUp, Calendar, Flame, Zap, Scan, Cpu,
+} from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { Meeting, Race, Runner } from '@/types/database';
 import { getRaceStatus, toNum } from '@/lib/raceUtils';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import RaceCard from '@/components/RaceCard';
+import ModelStatus from '@/components/ModelStatus';
 
 type FilterType = 'all' | 'soon' | 'falsefav';
 const REFRESH_INTERVAL = 60_000;
@@ -17,18 +21,60 @@ interface MeetingGroup {
   races: Race[];
 }
 
+function ScanningLoader() {
+  const [scanText, setScanText] = useState('');
+  const messages = [
+    'Connecting to race data feed...',
+    'Scanning today\'s meetings...',
+    'Ingesting form data for 8 tracks...',
+    'Running probability model...',
+    'Calculating speed maps...',
+    'Detecting false favourites patterns...',
+    'Generating confidence scores...',
+    'Compiling race analysis...',
+  ];
+
+  useEffect(() => {
+    let i = 0;
+    const interval = setInterval(() => {
+      setScanText(messages[i % messages.length]);
+      i++;
+    }, 400);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="flex flex-col items-center justify-center py-20 gap-4">
+      <div className="relative">
+        <div className="h-16 w-16 animate-spin rounded-full border-2 border-ink-200 border-t-amber-500" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Cpu className="h-6 w-6 text-amber-500 animate-pulseSubtle" />
+        </div>
+      </div>
+      <div className="text-center">
+        <p className="font-display text-sm tracking-wide text-ink-700">ANALYZING RACE DATA</p>
+        <p className="mono mt-1 text-xs text-amber-600 animate-pulseSubtle">{scanText}</p>
+      </div>
+      {/* Scanning bar */}
+      <div className="w-48 h-1 rounded-full bg-ink-100 overflow-hidden">
+        <div className="h-full w-1/3 rounded-full bg-gradient-to-r from-transparent via-amber-500 to-transparent animate-shimmer" style={{ backgroundSize: '200% 100%' }} />
+      </div>
+    </div>
+  );
+}
+
 function SkeletonCard() {
   return (
     <div className="card border-l-4 border-l-ink-200 p-4">
       <div className="flex items-center gap-3">
-        <div className="h-5 w-5 rounded bg-ink-100 animate-pulse" />
+        <div className="h-8 w-8 rounded-lg bg-ink-100 animate-pulse" />
         <div className="space-y-1.5">
           <div className="h-6 w-20 rounded bg-ink-100 animate-pulse" />
           <div className="h-3 w-16 rounded bg-ink-100 animate-pulse" />
         </div>
         <div className="flex-1 space-y-1.5">
           <div className="h-4 w-48 rounded bg-ink-100 animate-pulse" />
-          <div className="h-1.5 w-32 rounded-full bg-ink-100 animate-pulse" />
+          <div className="h-2 w-32 rounded-full bg-ink-100 animate-pulse" />
         </div>
         <div className="space-y-1.5">
           <div className="h-4 w-24 rounded bg-ink-100 animate-pulse" />
@@ -199,7 +245,6 @@ export default function Dashboard() {
       <div className="relative h-36 overflow-hidden sm:h-48">
         <img src={HERO_IMG} alt="Greyhound racing" className="h-full w-full object-cover" />
         <div className="absolute inset-0 hero-overlay" />
-        {/* Floating orbs */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute -right-10 top-4 h-32 w-32 rounded-full bg-amber-500/10 blur-3xl animate-float" />
         </div>
@@ -219,6 +264,13 @@ export default function Dashboard() {
       </div>
 
       <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">
+        {/* Model pipeline + activity feed */}
+        {!loading && totalRaces > 0 && (
+          <div className="mb-6 animate-fadeInUp">
+            <ModelStatus />
+          </div>
+        )}
+
         {/* Control bar */}
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
@@ -384,12 +436,7 @@ export default function Dashboard() {
 
         {/* Content */}
         {loading ? (
-          <div className="space-y-4">
-            <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
-          </div>
+          <ScanningLoader />
         ) : error ? (
           <div className="card border-red-200 p-6 text-center text-red-600">
             <AlertCircle className="mx-auto mb-3 h-8 w-8 text-red-400" />
@@ -398,8 +445,9 @@ export default function Dashboard() {
           </div>
         ) : meetingGroups.length === 0 ? (
           <div className="card p-12 text-center">
+            <Scan className="mx-auto mb-3 h-10 w-10 text-ink-300" />
             <p className="text-ink-400">No races available for today.</p>
-            <p className="mt-1 text-sm text-ink-400">Check back later or refresh the page.</p>
+            <p className="mt-1 text-sm text-ink-400">The model is waiting for race data to be published.</p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -411,7 +459,7 @@ export default function Dashboard() {
 
               return (
                 <div key={meeting.id} className={`animate-fadeInUp stagger-${Math.min(mIdx + 1, 8)}`}>
-                  {/* Meeting header — richer design */}
+                  {/* Meeting header */}
                   <button
                     onClick={() => toggleMeeting(meeting.id)}
                     className="group mb-3 flex w-full items-center gap-3 rounded-xl border border-ink-200 bg-white p-3 shadow-sm transition-all hover:shadow-md hover:border-amber-300"
@@ -433,7 +481,6 @@ export default function Dashboard() {
                       <span className="badge bg-ink-100 text-ink-500 flex-shrink-0">{meeting.state}</span>
                       <span className="mono text-sm text-ink-400 hidden sm:inline">{meeting.venue_code}</span>
                     </div>
-                    {/* Meeting stats pills */}
                     <div className="hidden sm:flex items-center gap-2">
                       {meetingHighConf > 0 && (
                         <span className="badge bg-green-50 text-green-600 border border-green-200">
