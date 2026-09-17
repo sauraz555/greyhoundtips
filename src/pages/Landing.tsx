@@ -62,6 +62,12 @@ export default function Landing() {
             >
               Pricing
             </button>
+            <button
+              onClick={() => scrollToSection('faq')}
+              className={`btn-ghost text-sm ${scrolled ? 'text-ink-500 hover:text-ink-900 hover:bg-ink-100' : 'text-ink-200 hover:text-ink-50 hover:bg-white/10'}`}
+            >
+              FAQ
+            </button>
             <Link
               to="/login"
               className={`btn-ghost text-sm ${scrolled ? 'text-ink-700 hover:bg-ink-100' : 'text-ink-100 hover:bg-white/10'}`}
@@ -93,6 +99,7 @@ export default function Landing() {
               <button onClick={() => scrollToSection('how-it-works')} className="btn-ghost justify-start py-3 text-ink-700">How it works</button>
               <button onClick={() => scrollToSection('track-record')} className="btn-ghost justify-start py-3 text-ink-700">Track record</button>
               <button onClick={() => scrollToSection('pricing')} className="btn-ghost justify-start py-3 text-ink-700">Pricing</button>
+              <button onClick={() => scrollToSection('faq')} className="btn-ghost justify-start py-3 text-ink-700">FAQ</button>
               <Link to="/login" className="btn-ghost justify-start py-3 text-ink-700">Log in</Link>
               <button onClick={() => scrollToSection('pricing')} className="btn-primary mt-2">Get started <ArrowRight className="h-4 w-4" /></button>
             </div>
@@ -306,7 +313,7 @@ export default function Landing() {
             <h2 className="mt-2 font-display text-3xl tracking-wide text-ink-50 sm:text-4xl">
               THE MODEL <span className="text-gradient-amber">PERFORMS</span>
             </h2>
-            <p className="mt-2 text-ink-400">Transparent methodology. Measurable results.</p>
+            <p className="mt-2 text-ink-600">Transparent methodology. Measurable results.</p>
           </div>
 
           {/* Hit-rate stats */}
@@ -349,7 +356,7 @@ export default function Landing() {
                 </div>
               ))}
             </div>
-            <p className="mt-3 text-xs text-ink-500">Sample results from a single day's model output. Past performance does not guarantee future results.</p>
+            <p className="mt-3 text-xs text-ink-400">Sample results from a single day's model output. Past performance does not guarantee future results.</p>
           </div>
 
           {/* Methodology */}
@@ -426,10 +433,76 @@ export default function Landing() {
               <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
             </button>
 
-            <p className="mt-3 text-center text-xs text-ink-400">
+            <p className="mt-3 text-center text-xs text-ink-500">
               No charge for 3 days. $25/month after. Cancel anytime.
             </p>
           </div>
+
+          {/* Compliance disclosure — prominent, directly under CTA */}
+          <div className="border-t border-ink-100 bg-amber-50/50 p-4">
+            <div className="flex items-start gap-2.5">
+              <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" />
+              <div className="text-xs leading-relaxed text-amber-800">
+                <span className="font-semibold">Not financial or betting advice.</span>{' '}
+                Greyhound Edge provides model-generated statistical analysis for informational purposes only.
+                No outcome is guaranteed. Past performance does not guarantee future results.
+                <span className="font-semibold"> 18+ only. Please gamble responsibly.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── FAQ ─── */}
+      <section id="faq" className="mx-auto w-full max-w-3xl px-4 py-16 sm:py-20">
+        <div className="mb-8 text-center">
+          <span className="text-sm font-semibold uppercase tracking-wider text-amber-600">FAQ</span>
+          <h2 className="mt-2 font-display text-3xl tracking-wide text-ink-900 sm:text-4xl">
+            QUESTIONS, <span className="text-gradient-amber">ANSWERED</span>
+          </h2>
+        </div>
+
+        <div className="space-y-3">
+          {[
+            {
+              q: 'What happens when the 3-day trial ends?',
+              a: 'Your card is automatically charged $25/month starting on day 4. You keep full access to every race, every model pick, and every feature. You can cancel at any time before the trial ends and you will not be charged.',
+            },
+            {
+              q: 'How do I cancel?',
+              a: 'Log in, go to Account, and click Cancel Subscription. You keep access until the end of your current billing period. There is no lock-in contract — cancel anytime, no questions asked.',
+            },
+            {
+              q: 'What data feeds the model?',
+              a: 'The model combines four data sources: speed maps (box-by-box early speed projections from historical sectional times), form analysis (recent starts, finishing positions, margin data, and grade-level performance weighted by recency), market comparison (model probability vs market price to identify value and false favourites), and historical patterns (track-specific win rates by box, distance, and grade, built from thousands of past races).',
+            },
+            {
+              q: 'Is this betting advice?',
+              a: 'No. Greyhound Edge provides statistical analysis for informational purposes only. It is not financial or betting advice. No outcome is guaranteed. Past performance does not guarantee future results. Please gamble responsibly.',
+            },
+            {
+              q: 'Which tracks do you cover?',
+              a: 'All major Australian greyhound tracks including Wentworth Park, Sandown, Angle Park, The Meadows, Richmond, and more. The dashboard updates daily with every available meeting.',
+            },
+            {
+              q: 'Can I use this on my phone?',
+              a: 'Yes. The dashboard is fully responsive and designed for checking races between meetings on a phone. Race cards expand inline without losing your scroll position.',
+            },
+          ].map((item, i) => (
+            <details
+              key={i}
+              className="card overflow-hidden animate-fadeInUp"
+              style={{ animationDelay: `${i * 0.05}s` }}
+            >
+              <summary className="flex cursor-pointer items-center justify-between gap-3 p-4 text-left font-semibold text-ink-900 transition-colors hover:bg-ink-50">
+                {item.q}
+                <ChevronDown className="h-4 w-4 flex-shrink-0 text-ink-500 transition-transform" />
+              </summary>
+              <div className="px-4 pb-4 text-sm text-ink-600 leading-relaxed">
+                {item.a}
+              </div>
+            </details>
+          ))}
         </div>
       </section>
 

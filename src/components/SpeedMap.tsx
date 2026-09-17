@@ -70,7 +70,7 @@ export default function SpeedMap({ runners, distanceM }: Props) {
           <Route className="h-3.5 w-3.5 text-amber-400" />
         </div>
         <h3 className="font-display text-sm tracking-wide text-ink-900">SPEED MAP PROJECTION</h3>
-        <span className="ml-auto mono text-xs text-ink-400">{distanceM}m</span>
+        <span className="ml-auto mono text-xs text-ink-500">{distanceM}m</span>
       </div>
 
       {/* Track visualization — curved track feel */}
@@ -143,10 +143,10 @@ export default function SpeedMap({ runners, distanceM }: Props) {
 
               {/* Top 4 indicator */}
               <div className="flex-shrink-0 w-12 text-right">
-                <div className={`mono text-xs font-bold ${pos.isTop ? 'text-amber-600' : 'text-ink-500'}`}>
+                <div className={`mono text-xs font-bold ${pos.isTop ? 'text-amber-600' : 'text-ink-600'}`}>
                   {pos.top4Pct.toFixed(0)}%
                 </div>
-                <div className="text-[9px] text-ink-400 uppercase">T4</div>
+                <div className="text-[9px] text-ink-500 uppercase">T4</div>
               </div>
             </div>
           ))}
@@ -156,8 +156,8 @@ export default function SpeedMap({ runners, distanceM }: Props) {
         <div className="mt-2 flex items-center gap-2">
           <div className="flex-1 border-t-2 border-dashed border-ink-300" />
           <div className="flex items-center gap-1">
-            <Flag className="h-3 w-3 text-ink-400" />
-            <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Finish</span>
+            <Flag className="h-3 w-3 text-ink-500" />
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Finish</span>
           </div>
           <div className="flex-1 border-t-2 border-dashed border-ink-300" />
         </div>
@@ -165,7 +165,7 @@ export default function SpeedMap({ runners, distanceM }: Props) {
 
       {/* Early speed ranking bars */}
       <div className="mt-3">
-        <h4 className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-ink-400">
+        <h4 className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-ink-500">
           <TrendingUp className="h-3 w-3" />
           Early Speed Ranking
         </h4>
@@ -191,7 +191,7 @@ export default function SpeedMap({ runners, distanceM }: Props) {
       </div>
 
       {/* Legend */}
-      <div className="mt-3 flex items-center gap-4 text-xs text-ink-400">
+      <div className="mt-3 flex items-center gap-4 text-xs text-ink-500">
         <div className="flex items-center gap-1.5">
           <div className="h-2.5 w-2.5 rounded bg-amber-500" />
           <span>Model pick</span>

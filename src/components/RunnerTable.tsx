@@ -12,7 +12,7 @@ export default function RunnerTable({ runners }: Props) {
     <div className="overflow-x-auto rounded-xl border border-ink-100">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-ink-200 bg-ink-50 text-left text-xs uppercase tracking-wide text-ink-400">
+          <tr className="border-b border-ink-200 bg-ink-50 text-left text-xs uppercase tracking-wide text-ink-500">
             <th className="py-2.5 pl-3 pr-3 font-semibold">Box</th>
             <th className="py-2.5 pr-3 font-semibold">Runner</th>
             <th className="py-2.5 pr-3 font-semibold hidden sm:table-cell">Trainer</th>

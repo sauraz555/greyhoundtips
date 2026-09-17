@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  ChevronDown, AlertTriangle, ExternalLink, Clock, Layers, Zap,
-  Gauge, Target, ArrowRight, Flame,
+  ChevronDown, AlertTriangle, Clock, Layers, Zap,
+  Gauge, Target, ArrowRight, Flame, ExternalLink,
 } from 'lucide-react';
 import type { Race, Runner } from '@/types/database';
 import {
@@ -13,6 +13,7 @@ import {
 import RunnerTable from './RunnerTable';
 import ProbabilityChart from './ProbabilityChart';
 import SpeedMap from './SpeedMap';
+import InfoTip from './InfoTip';
 
 interface Props {
   race: Race;
@@ -64,7 +65,7 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
 
   return (
     <div className={`card ${cardOpacity} ${statusGlow} card-hover transition-all duration-300`}>
-      {/* Compact header */}
+      {/* Compact header — clickable to expand inline */}
       <button
         onClick={() => setExpanded(!expanded)}
         className="flex w-full items-center gap-3 p-4 text-left"
@@ -78,18 +79,28 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
         <div className="flex-shrink-0">
           <div className="flex items-baseline gap-2">
             <span className="mono text-2xl font-bold text-ink-900">R{race.race_number}</span>
-            <span className="text-sm text-ink-500">{race.grade}</span>
+            <InfoTip
+              label={race.grade ?? ''}
+              tip="Grade classification for this race. Higher grade = stronger field. Maidens are for dogs yet to win a race."
+            />
           </div>
-          <div className="mono text-xs text-ink-400">{race.distance_m}m</div>
+          <div className="mono text-xs text-ink-500">
+            <InfoTip
+              label={`${race.distance_m}m`}
+              tip="Race distance in metres. Common distances: 400m (sprint), 515m (standard), 720m (staying). Distance affects which dogs are favoured based on their speed vs stamina profile."
+            />
+          </div>
         </div>
 
         {/* Probable winner */}
         <div className="ml-2 flex-1 min-w-0">
           {race.probable_winner_name && (
             <div className="flex items-center gap-2">
-              <span className="mono inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-ink-900 text-xs font-bold text-ink-50 shadow-sm">
-                {race.probable_winner_box}
-              </span>
+              <InfoTip
+                label={`Box ${race.probable_winner_box}`}
+                tip="The starting box (trap) number. Box 1 is inside (rail), Box 8 is outside. Inside boxes generally have a slight advantage, especially at shorter distances."
+                className="mono inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-ink-900 text-xs font-bold text-ink-50 shadow-sm"
+              />
               <span className="truncate font-semibold text-ink-900">{race.probable_winner_name}</span>
             </div>
           )}
@@ -114,13 +125,13 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
                 : isInProgress
                   ? 'text-green-600'
                   : isFinished
-                    ? 'text-ink-400'
-                    : 'text-ink-600'
+                    ? 'text-ink-500'
+                    : 'text-ink-700'
             }`}
           >
             {countdown}
           </div>
-          <div className="mono text-xs text-ink-400">{postTime} AEST</div>
+          <div className="mono text-xs text-ink-500">{postTime} AEST</div>
         </div>
       </button>
 
@@ -145,24 +156,20 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
           </span>
         )}
         {isFinished && (
-          <span className="badge bg-ink-100 text-ink-400">Completed</span>
+          <span className="badge bg-ink-100 text-ink-500">Completed</span>
         )}
         {/* Runner count + field avg */}
-        <div className="flex items-center gap-2 text-xs text-ink-400">
+        <div className="flex items-center gap-2 text-xs text-ink-500">
           <span className="mono">{runners.length} runners</span>
-          <span className="text-ink-300">·</span>
+          <span className="text-ink-400">·</span>
           <span className="mono">field avg {fieldAvg.toFixed(1)}%</span>
         </div>
-        <Link
-          to={`/race/${race.id}`}
-          className="btn-ghost ml-auto text-xs group"
-        >
-          <ExternalLink className="h-3 w-3 transition-transform group-hover:scale-110" />
-          Open
-        </Link>
+        <span className="mono text-xs text-ink-500 ml-auto hidden sm:inline">
+          {expanded ? 'Tap to collapse' : 'Tap to expand'}
+        </span>
       </div>
 
-      {/* Expanded analysis panel */}
+      {/* Expanded analysis panel — inline, no navigation */}
       {expanded && (
         <div className="animate-slideDown border-t border-ink-100">
           {/* False fav reason banner */}
@@ -180,7 +187,7 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
 
           {/* Top 3 model picks — card style */}
           <div className="px-4 pt-4">
-            <h4 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-400">
+            <h4 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-500">
               <Target className="h-3.5 w-3.5" />
               Model Top 3
             </h4>
@@ -201,7 +208,7 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
                   </span>
                   <div className="flex-1 min-w-0">
                     <div className="truncate text-sm font-semibold text-ink-900">{r.name}</div>
-                    <div className="mono text-xs text-ink-500 mt-0.5">
+                    <div className="mono text-xs text-ink-600 mt-0.5">
                       {fmtPct(r.win_pct)} · {fmtPrice(r.price)}
                     </div>
                   </div>
@@ -224,7 +231,7 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
 
           {/* Full runner table */}
           <div className="px-4 pt-4">
-            <h4 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-400">
+            <h4 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-500">
               <Gauge className="h-3.5 w-3.5" />
               Full Runner Table
             </h4>
@@ -235,7 +242,7 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
           <div className="mx-4 mb-4 border-t border-ink-100 pt-3">
             <button
               onClick={() => setShowExotics(!showExotics)}
-              className="group flex items-center gap-2 text-sm font-semibold text-ink-600 transition-colors hover:text-ink-900"
+              className="group flex items-center gap-2 text-sm font-semibold text-ink-700 transition-colors hover:text-ink-900"
             >
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-ink-100 group-hover:bg-amber-100 transition-colors">
                 <Layers className="h-4 w-4" />
@@ -247,7 +254,7 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
               <div className="animate-slideDown mt-3 space-y-3">
                 {exoticTiers.map((tier, tIdx) => (
                   <div key={tier.label} className={`rounded-xl bg-ink-50 p-3 border border-ink-100 animate-fadeInUp stagger-${tIdx + 1}`}>
-                    <h5 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-400">
+                    <h5 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-500">
                       <Zap className="h-3 w-3 text-amber-500" />
                       {tier.label}
                     </h5>
@@ -258,8 +265,8 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
                           className="mono inline-flex items-center gap-1 rounded-lg border border-ink-200 bg-white px-2.5 py-1.5 text-xs transition-all hover:border-amber-300 hover:shadow-sm hover:bg-amber-50/50"
                         >
                           <span className="font-bold text-ink-900">B{r.box}</span>
-                          <span className="text-ink-600">{r.name}</span>
-                          <span className="text-ink-400 border-l border-ink-200 pl-1">
+                          <span className="text-ink-700">{r.name}</span>
+                          <span className="text-ink-500 border-l border-ink-200 pl-1">
                             {tier.label.includes('Top 4') ? fmtPct(r.top4_pct, 0) : fmtPct(r.win_pct, 0)}
                           </span>
                         </span>
@@ -267,11 +274,22 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
                     </div>
                   </div>
                 ))}
-                <p className="text-xs italic text-ink-400">
+                <p className="text-xs italic text-ink-500">
                   Model-generated groupings for exotic bet construction. Not betting advice.
                 </p>
               </div>
             )}
+          </div>
+
+          {/* Full race page link — at the bottom of the expanded section */}
+          <div className="border-t border-ink-100 px-4 py-3">
+            <Link
+              to={`/race/${race.id}`}
+              className="btn-ghost text-xs group ml-auto flex w-fit"
+            >
+              <ExternalLink className="h-3 w-3 transition-transform group-hover:scale-110" />
+              Open full race page
+            </Link>
           </div>
         </div>
       )}

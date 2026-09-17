@@ -354,7 +354,7 @@ export default function Dashboard() {
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h1 className="font-display text-3xl tracking-wide text-ink-900">TODAY'S RACES</h1>
-              <p className="mono mt-0.5 text-sm text-ink-400">{displayDate}</p>
+              <p className="mono mt-0.5 text-sm text-ink-500">{displayDate}</p>
             </div>
 
             <div className="flex items-center gap-2">
@@ -378,7 +378,7 @@ export default function Dashboard() {
                 <span className="hidden sm:inline">Refresh</span>
               </button>
               {lastRefresh && (
-                <span className="mono text-xs text-ink-400 hidden md:inline">
+                <span className="mono text-xs text-ink-500 hidden md:inline">
                   Updated {lastRefresh.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                 </span>
               )}
@@ -389,7 +389,7 @@ export default function Dashboard() {
         {/* Merged metrics strip — clickable to expand insights */}
         {!loading && totalRaces > 0 && (
           <>
-            <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6 animate-fadeInUp">
+            <div className="mb-4 grid grid-cols-3 gap-2 sm:grid-cols-3 lg:grid-cols-6 animate-fadeInUp">
               {metrics.map((m, i) => (
                 <button
                   key={m.label}
@@ -398,7 +398,7 @@ export default function Dashboard() {
                 >
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">{m.label}</p>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">{m.label}</p>
                       <p className={`mono mt-1 text-2xl font-bold ${m.color} transition-transform group-hover:scale-110 origin-left`}>
                         {m.value}
                       </p>
@@ -422,10 +422,10 @@ export default function Dashboard() {
                       <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100">
                         <Flame className="h-3.5 w-3.5 text-amber-600" />
                       </div>
-                      <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Model Edge</span>
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Model Edge</span>
                     </div>
                     <p className="mono text-xl font-bold text-amber-600">+{avgEdge.toFixed(1)}%</p>
-                    <p className="text-[10px] text-ink-400 mt-0.5">{edgeCount} races with edge {'>'} 3%</p>
+                    <p className="text-[10px] text-ink-500 mt-0.5">{edgeCount} races with edge {'>'} 3%</p>
                   </div>
 
                   {/* Confidence distribution */}
@@ -434,14 +434,14 @@ export default function Dashboard() {
                       <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-green-100">
                         <TrendingUp className="h-3.5 w-3.5 text-green-600" />
                       </div>
-                      <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Confidence Distribution</span>
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Confidence Distribution</span>
                     </div>
                     <div className="flex h-5 w-full overflow-hidden rounded-lg bg-ink-100">
                       <div className="h-full bg-green-500 transition-all duration-1000" style={{ width: `${totalRaces > 0 ? (highConfidenceCount / totalRaces) * 100 : 0}%` }} />
                       <div className="h-full bg-ink-400 transition-all duration-1000" style={{ width: `${totalRaces > 0 ? (races.filter((r) => r.confidence === 'Medium').length / totalRaces) * 100 : 0}%` }} />
                       <div className="h-full bg-ink-200 transition-all duration-1000" style={{ width: `${totalRaces > 0 ? (races.filter((r) => r.confidence === 'Low').length / totalRaces) * 100 : 0}%` }} />
                     </div>
-                    <div className="mt-1.5 flex items-center gap-3 text-[10px] text-ink-400">
+                    <div className="mt-1.5 flex items-center gap-3 text-[10px] text-ink-500">
                       <div className="flex items-center gap-1"><div className="h-2 w-2 rounded bg-green-500" /><span>HIGH ({highConfidenceCount})</span></div>
                       <div className="flex items-center gap-1"><div className="h-2 w-2 rounded bg-ink-400" /><span>MED</span></div>
                       <div className="flex items-center gap-1"><div className="h-2 w-2 rounded bg-ink-200" /><span>LOW</span></div>
@@ -454,10 +454,10 @@ export default function Dashboard() {
                       <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100">
                         <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
                       </div>
-                      <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-400">False Favourites</span>
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">False Favourites</span>
                     </div>
                     <p className="mono text-xl font-bold text-amber-600">{falseFavCount}</p>
-                    <p className="text-[10px] text-ink-400 mt-0.5">Market overvalued runners flagged</p>
+                    <p className="text-[10px] text-ink-500 mt-0.5">Market overvalued runners flagged</p>
                   </div>
                 </div>
                 <button
@@ -480,7 +480,7 @@ export default function Dashboard() {
                 <Flame className="h-4 w-4 text-ink-900" />
               </div>
               <h2 className="font-display text-lg tracking-wide text-ink-900">TOP PICKS</h2>
-              <span className="mono text-xs text-ink-400">Highest model confidence</span>
+              <span className="mono text-xs text-ink-500">Highest model confidence</span>
             </div>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
               {topPicks.map((pick, idx) => {
@@ -495,7 +495,7 @@ export default function Dashboard() {
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="mono text-xs text-ink-400">
+                      <span className="mono text-xs text-ink-500">
                         {pick.venueName} · R{pick.race.race_number}
                       </span>
                       <span className="mono text-lg font-bold text-ink-900">
@@ -632,9 +632,9 @@ export default function Dashboard() {
           </div>
         ) : meetingGroups.length === 0 ? (
           <div className="card p-12 text-center">
-            <Scan className="mx-auto mb-3 h-10 w-10 text-ink-300" />
-            <p className="text-ink-400">No races available for today.</p>
-            <p className="mt-1 text-sm text-ink-400">The model is waiting for race data to be published.</p>
+            <Scan className="mx-auto mb-3 h-10 w-10 text-ink-400" />
+            <p className="text-ink-600">No races available for today.</p>
+            <p className="mt-1 text-sm text-ink-600">The model is waiting for race data to be published.</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -667,7 +667,7 @@ export default function Dashboard() {
                         <span className="badge bg-ink-800 text-ink-300 flex-shrink-0">{meeting.state}</span>
                         <span className="mono text-sm text-ink-400 hidden sm:inline">{meeting.venue_code}</span>
                       </div>
-                      <div className="hidden sm:flex items-center gap-2">
+                      <div className="flex items-center gap-2">
                         {meetingHighConf > 0 && (
                           <span className="badge bg-green-900/40 text-green-400 border border-green-800">
                             <TrendingUp className="h-3 w-3" />
@@ -680,7 +680,7 @@ export default function Dashboard() {
                             {meetingFalseFav} FF
                           </span>
                         )}
-                        <span className="mono text-sm text-ink-400 flex-shrink-0">
+                        <span className="mono text-sm text-ink-400 flex-shrink-0 hidden sm:inline">
                           {meetingRaces.length} race{meetingRaces.length !== 1 ? 's' : ''}
                         </span>
                       </div>
@@ -694,7 +694,7 @@ export default function Dashboard() {
                   {!isCollapsed && (
                     <div className="mt-3 space-y-3 animate-slideDown">
                       {meetingRaces.length === 0 ? (
-                        <p className="py-4 text-center text-sm text-ink-400">
+                        <p className="py-4 text-center text-sm text-ink-500">
                           No races match this filter.
                         </p>
                       ) : (

@@ -55,7 +55,7 @@ export default function ProbabilityChart({ runners }: Props) {
           <BarChart3 className="h-3.5 w-3.5 text-amber-400" />
         </div>
         <h3 className="font-display text-sm tracking-wide text-ink-900">WIN PROBABILITY DISTRIBUTION</h3>
-        <span className="ml-auto mono text-xs text-ink-400">{bars.length} runners</span>
+        <span className="ml-auto mono text-xs text-ink-500">{bars.length} runners</span>
       </div>
 
       {/* Chart */}
@@ -110,14 +110,14 @@ export default function ProbabilityChart({ runners }: Props) {
                   style={{ width: animated ? `${Math.max((bar.impliedPct / maxPct) * 100, 2)}%` : '0%' }}
                 />
               </div>
-              <span className="mono text-[10px] text-ink-400 w-10 text-right">{fmtPrice(bar.price)}</span>
+              <span className="mono text-[10px] text-ink-500 w-10 text-right">{fmtPrice(bar.price)}</span>
             </div>
           </div>
         ))}
       </div>
 
       {/* Legend */}
-      <div className="mt-3 flex items-center gap-4 text-xs text-ink-400 flex-wrap">
+      <div className="mt-3 flex items-center gap-4 text-xs text-ink-500 flex-wrap">
         <div className="flex items-center gap-1.5">
           <div className="h-2.5 w-2.5 rounded bg-amber-500" />
           <span>Model probability</span>
