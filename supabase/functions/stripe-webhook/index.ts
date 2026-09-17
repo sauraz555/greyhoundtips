@@ -7,10 +7,18 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
-const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
-const stripeWebhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
 const supabaseUrl = Deno.env.get("SUPABASE_URL");
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+async function getConfig(supabase: ReturnType<typeof createClient>, key: string): Promise<string> {
+  const { data, error } = await supabase
+    .from("app_config")
+    .select("value")
+    .eq("key", key)
+    .maybeSingle();
+  if (error || !data) throw new Error(`Missing config: ${key}`);
+  return data.value;
+}
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
@@ -18,7 +26,14 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const stripe = new Stripe(stripeSecretKey!, {
+    const supabase = createClient(supabaseUrl!, supabaseServiceKey!, {
+      auth: { persistSession: false },
+    });
+
+    const stripeSecretKey = await getConfig(supabase, "stripe_secret_key");
+    const stripeWebhookSecret = await getConfig(supabase, "stripe_webhook_secret");
+
+    const stripe = new Stripe(stripeSecretKey, {
       apiVersion: "2024-06-20",
       httpClient: Stripe.createFetchHttpClient(),
     });
@@ -26,8 +41,8 @@ Deno.serve(async (req: Request) => {
     const body = await req.text();
     const signature = req.headers.get("stripe-signature");
 
-    if (!signature || !stripeWebhookSecret) {
-      return new Response(JSON.stringify({ error: "Missing signature or secret" }), {
+    if (!signature) {
+      return new Response(JSON.stringify({ error: "Missing signature" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -41,10 +56,6 @@ Deno.serve(async (req: Request) => {
       Stripe.createSubtleCryptoProvider(),
     );
 
-    const supabase = createClient(supabaseUrl!, supabaseServiceKey!, {
-      auth: { persistSession: false },
-    });
-
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
@@ -53,7 +64,6 @@ Deno.serve(async (req: Request) => {
         const subscriptionId = session.subscription as string;
 
         if (userId) {
-          // Retrieve the subscription to get trial and period end dates
           const subscription = await stripe.subscriptions.retrieve(subscriptionId);
 
           await supabase
@@ -121,7 +131,6 @@ Deno.serve(async (req: Request) => {
       }
 
       default:
-        // Unhandled event type — no action needed
         break;
     }
 

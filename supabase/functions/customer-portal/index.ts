@@ -7,10 +7,18 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
-const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
 const supabaseUrl = Deno.env.get("SUPABASE_URL");
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-const siteUrl = Deno.env.get("SITE_URL") || "https://greyhoundedge.app";
+
+async function getConfig(supabase: ReturnType<typeof createClient>, key: string): Promise<string> {
+  const { data, error } = await supabase
+    .from("app_config")
+    .select("value")
+    .eq("key", key)
+    .maybeSingle();
+  if (error || !data) throw new Error(`Missing config: ${key}`);
+  return data.value;
+}
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
@@ -54,7 +62,10 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const stripe = new Stripe(stripeSecretKey!, {
+    const stripeSecretKey = await getConfig(supabase, "stripe_secret_key");
+    const siteUrl = await getConfig(supabase, "site_url");
+
+    const stripe = new Stripe(stripeSecretKey, {
       apiVersion: "2024-06-20",
       httpClient: Stripe.createFetchHttpClient(),
     });

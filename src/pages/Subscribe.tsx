@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 
-const PRICE_ID = 'price_1Q9zZzLkDn3qRt2oYfM4qXaV';
+const PRICE_ID = 'price_1UGdvdK5ffGf1vlHcnVqKF3o';
 
 export default function Subscribe() {
   const { user, subscription, refreshSubscription } = useAuth();
