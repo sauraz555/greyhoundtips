@@ -71,7 +71,7 @@ export default function Landing() {
             <div className="flex items-center gap-2">
               <Target className="h-5 w-5 text-amber-400" />
               <span className="mono text-sm text-ink-200">
-                <span className="font-bold text-ink-50">8</span> runners per race
+                <span className="font-bold text-ink-50">Variable</span> field sizes
               </span>
             </div>
           </div>
