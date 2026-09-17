@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { Phone, ExternalLink } from 'lucide-react';
 
 export default function Footer() {
@@ -9,7 +10,10 @@ export default function Footer() {
             <p className="font-semibold text-ink-100">Greyhound Edge</p>
             <p className="mt-1">Model-generated race analysis. Not financial or betting advice.</p>
           </div>
-          <div className="flex flex-col items-center gap-2 sm:items-end">
+          <div className="flex flex-col items-center gap-3 sm:items-end">
+            <Link to="/blog" className="text-sm font-semibold text-ink-200 hover:text-amber-300 transition-colors">
+              Engineering Blog
+            </Link>
             <a
               href="https://www.gamblinghelponline.org.au/"
               target="_blank"

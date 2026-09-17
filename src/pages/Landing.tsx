@@ -50,6 +50,12 @@ export default function Landing() {
             >
               How it works
             </button>
+            <Link
+              to="/blog"
+              className={`btn-ghost text-sm ${scrolled ? 'text-ink-500 hover:text-ink-900 hover:bg-ink-100' : 'text-ink-200 hover:text-ink-50 hover:bg-white/10'}`}
+            >
+              Blog
+            </Link>
             <button
               onClick={() => scrollToSection('track-record')}
               className={`btn-ghost text-sm ${scrolled ? 'text-ink-500 hover:text-ink-900 hover:bg-ink-100' : 'text-ink-200 hover:text-ink-50 hover:bg-white/10'}`}
@@ -97,6 +103,7 @@ export default function Landing() {
           <div className="animate-slideDown border-t border-ink-200 bg-ink-50 md:hidden">
             <div className="flex flex-col gap-1 px-4 py-3">
               <button onClick={() => scrollToSection('how-it-works')} className="btn-ghost justify-start py-3 text-ink-700">How it works</button>
+              <Link to="/blog" className="btn-ghost justify-start py-3 text-ink-700">Blog</Link>
               <button onClick={() => scrollToSection('track-record')} className="btn-ghost justify-start py-3 text-ink-700">Track record</button>
               <button onClick={() => scrollToSection('pricing')} className="btn-ghost justify-start py-3 text-ink-700">Pricing</button>
               <button onClick={() => scrollToSection('faq')} className="btn-ghost justify-start py-3 text-ink-700">FAQ</button>

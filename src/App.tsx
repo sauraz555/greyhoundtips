@@ -8,6 +8,8 @@ import Dashboard from '@/pages/Dashboard';
 import RaceDetail from '@/pages/RaceDetail';
 import Account from '@/pages/Account';
 import Subscribe from '@/pages/Subscribe';
+import BlogList from '@/pages/BlogList';
+import BlogArticle from '@/pages/BlogArticle';
 
 export default function App() {
   return (
@@ -15,6 +17,8 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Landing />} />
+          <Route path="/blog" element={<BlogList />} />
+          <Route path="/blog/:slug" element={<BlogArticle />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
           <Route path="/subscribe" element={<Subscribe />} />
