@@ -32,9 +32,9 @@ export default function Login() {
     if (data.session) {
       const { data: subData } = await supabase
         .from('stripe_user_subscriptions')
-        .select('subscription_status')
+        .select('status')
         .maybeSingle();
-      const status = subData?.subscription_status;
+      const status = subData?.status;
       if (status === 'trialing' || status === 'active' || status === 'past_due') {
         navigate('/dashboard');
       } else {
