@@ -63,7 +63,7 @@ Deno.serve(async (req: Request) => {
     const siteUrl = await getConfig(supabase, "site_url");
 
     const stripe = new Stripe(stripeSecretKey, {
-      apiVersion: "2024-06-20",
+      apiVersion: "2025-03-31.basil" as any,
       httpClient: Stripe.createFetchHttpClient(),
     });
 

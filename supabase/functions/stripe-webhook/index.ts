@@ -34,7 +34,7 @@ Deno.serve(async (req: Request) => {
     const stripeWebhookSecret = await getConfig(supabase, "stripe_webhook_secret");
 
     const stripe = new Stripe(stripeSecretKey, {
-      apiVersion: "2024-06-20",
+      apiVersion: "2025-03-31.basil" as any,
       httpClient: Stripe.createFetchHttpClient(),
     });
 
