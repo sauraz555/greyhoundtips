@@ -30,7 +30,7 @@ export default function Landing() {
       <header
         className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? 'border-b border-ink-200 bg-ink-50/95 backdrop-blur-sm shadow-sm' : 'bg-transparent'}`}
       >
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 text-black [&_*]:!text-black">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
           <Link to="/" className="group flex items-center gap-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500 shadow-md shadow-amber-500/20 transition-transform group-hover:scale-110">
               <PawPrint className="h-5 w-5 text-ink-900" />
@@ -333,7 +333,7 @@ export default function Landing() {
               <div key={s.label} className={`rounded-xl border border-ink-700 bg-ink-800/50 p-5 text-center animate-fadeInUp stagger-${i + 1}`}>
                 <p className="font-display text-4xl tracking-wide text-amber-400">{s.stat}</p>
                 <p className="mt-2 text-sm font-semibold text-ink-100">{s.label}</p>
-                <p className="mt-1 text-xs text-ink-400 leading-relaxed">{s.sub}</p>
+                <p className="mt-1 text-xs text-ink-500 leading-relaxed">{s.sub}</p>
               </div>
             ))}
           </div>
@@ -363,7 +363,7 @@ export default function Landing() {
                 </div>
               ))}
             </div>
-            <p className="mt-3 text-xs text-ink-400">Sample results from a single day's model output. Past performance does not guarantee future results.</p>
+            <p className="mt-3 text-xs text-ink-500">Sample results from a single day's model output. Past performance does not guarantee future results.</p>
           </div>
 
           {/* Methodology */}
@@ -385,7 +385,7 @@ export default function Landing() {
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-ink-100">{m.title}</p>
-                    <p className="mt-0.5 text-xs text-ink-400 leading-relaxed">{m.desc}</p>
+                    <p className="mt-0.5 text-xs text-ink-500 leading-relaxed">{m.desc}</p>
                   </div>
                 </div>
               ))}
@@ -516,7 +516,7 @@ export default function Landing() {
       {/* ─── Disclaimer ─── */}
       <section className="bg-ink-900 py-8">
         <div className="mx-auto max-w-4xl px-4">
-          <p className="text-center text-xs text-ink-400 leading-relaxed">
+          <p className="text-center text-xs text-ink-500 leading-relaxed">
             Greyhound Edge provides model-generated statistical analysis for
             informational purposes only. This is <span className="font-semibold text-ink-200">not financial
             or betting advice</span>. No outcome is guaranteed. Past performance does not guarantee future results.
@@ -632,13 +632,13 @@ function RaceCardMockup() {
     <div className="rounded-2xl border border-ink-200 bg-white p-4 shadow-lg shadow-ink-900/10">
       {/* Header */}
       <div className="flex items-center gap-3 pb-3 border-b border-ink-100">
-        <ChevronDown className="h-5 w-5 text-ink-400" />
+        <ChevronDown className="h-5 w-5 text-ink-500" />
         <div>
           <div className="flex items-baseline gap-2">
             <span className="mono text-xl font-bold text-ink-900">R5</span>
             <span className="text-sm text-ink-500">Grade 5</span>
           </div>
-          <div className="mono text-xs text-ink-400">520m</div>
+          <div className="mono text-xs text-ink-500">520m</div>
         </div>
         <div className="ml-2 flex-1">
           <div className="flex items-center gap-2">
@@ -652,7 +652,7 @@ function RaceCardMockup() {
         </div>
         <div className="text-right">
           <div className="mono text-sm font-semibold text-amber-600 animate-pulseSubtle">starts in 8:24</div>
-          <div className="mono text-xs text-ink-400">17:45 AEST</div>
+          <div className="mono text-xs text-ink-500">17:45 AEST</div>
         </div>
       </div>
 
@@ -666,14 +666,14 @@ function RaceCardMockup() {
           <Clock className="h-3 w-3" />
           Jumping Soon
         </span>
-        <span className="mono text-xs text-ink-400">8 runners · field avg 12.5%</span>
+        <span className="mono text-xs text-ink-500">8 runners · field avg 12.5%</span>
       </div>
 
       {/* Top 3 */}
       <div className="pt-2 border-t border-ink-100">
         <div className="mb-1.5 flex items-center gap-1.5">
-          <Target className="h-3.5 w-3.5 text-ink-400" />
-          <span className="text-xs font-semibold uppercase tracking-wide text-ink-400">Model Top 3</span>
+          <Target className="h-3.5 w-3.5 text-ink-500" />
+          <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Model Top 3</span>
         </div>
         <div className="grid grid-cols-3 gap-2">
           {[
@@ -704,13 +704,13 @@ function FalseFavMockup() {
   return (
     <div className="rounded-2xl border border-ink-200 bg-white p-4 shadow-lg shadow-ink-900/10">
       <div className="flex items-center gap-3 pb-3 border-b border-ink-100">
-        <ChevronDown className="h-5 w-5 text-ink-400" />
+        <ChevronDown className="h-5 w-5 text-ink-500" />
         <div>
           <div className="flex items-baseline gap-2">
             <span className="mono text-xl font-bold text-ink-900">R3</span>
             <span className="text-sm text-ink-500">Maiden</span>
           </div>
-          <div className="mono text-xs text-ink-400">515m</div>
+          <div className="mono text-xs text-ink-500">515m</div>
         </div>
         <div className="ml-2 flex-1">
           <div className="flex items-center gap-2">
@@ -724,7 +724,7 @@ function FalseFavMockup() {
         </div>
         <div className="text-right">
           <div className="mono text-sm font-semibold text-ink-600">starts in 22:15</div>
-          <div className="mono text-xs text-ink-400">18:30 AEST</div>
+          <div className="mono text-xs text-ink-500">18:30 AEST</div>
         </div>
       </div>
 
@@ -759,7 +759,7 @@ function FalseFavMockup() {
             <span className="mono text-xs text-ink-500 w-8 text-right">{r.model}%</span>
           </div>
         ))}
-        <div className="flex items-center gap-4 mt-1 text-[10px] text-ink-400">
+        <div className="flex items-center gap-4 mt-1 text-[10px] text-ink-500">
           <div className="flex items-center gap-1"><div className="h-2 w-2 rounded bg-green-500" /><span>Model</span></div>
           <div className="flex items-center gap-1"><div className="h-2 w-2 rounded bg-amber-500" /><span>False Favourite</span></div>
         </div>

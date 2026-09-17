@@ -396,14 +396,14 @@ export default function Dashboard() {
                   onClick={() => m.label === 'Avg Pick' || m.label === 'High Conf' || m.label === 'False Favs' ? setShowInsights(!showInsights) : undefined}
                   className={`stat-card text-left animate-fadeInUp stagger-${Math.min(i + 1, 6)} group ${showInsights && (m.label === 'Avg Pick' || m.label === 'High Conf' || m.label === 'False Favs') ? 'ring-2 ring-amber-300' : ''}`}
                 >
-                  <div className="flex items-start justify-between">
+                  <div className="flex items-start justify-between gap-1">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">{m.label}</p>
-                      <p className={`mono mt-1 text-2xl font-bold ${m.color} transition-transform group-hover:scale-110 origin-left`}>
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500 leading-tight">{m.label}</p>
+                      <p className={`mono mt-1 text-xl font-bold sm:text-2xl ${m.color} transition-transform group-hover:scale-110 origin-left`}>
                         {m.value}
                       </p>
                     </div>
-                    <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${m.iconBg} transition-colors`}>
+                    <div className={`flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg ${m.iconBg} transition-colors flex-shrink-0`}>
                       <m.icon className={`h-4 w-4 ${m.iconColor} transition-colors`} />
                     </div>
                   </div>
@@ -482,7 +482,7 @@ export default function Dashboard() {
               <h2 className="font-display text-lg tracking-wide text-ink-900">TOP PICKS</h2>
               <span className="mono text-xs text-ink-500">Highest model confidence</span>
             </div>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
               {topPicks.map((pick, idx) => {
                 const status = getRaceStatus(pick.race.start_time, now);
                 const isLive = status === 'starting-soon' || status === 'in-progress';
@@ -515,7 +515,7 @@ export default function Dashboard() {
                         <span className={`badge text-[10px] ${
                           pick.race.confidence === 'High' ? 'bg-green-100 text-green-700' :
                           pick.race.confidence === 'Medium' ? 'bg-ink-100 text-ink-600' :
-                          'bg-ink-50 text-ink-400'
+                          'bg-ink-100 text-ink-600'
                         }`}>
                           {pick.race.confidence === 'High' ? 'HIGH' : pick.race.confidence === 'Medium' ? 'MED' : 'LOW'}
                         </span>
@@ -554,7 +554,7 @@ export default function Dashboard() {
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between animate-fadeIn">
             {/* Search */}
             <div className="relative flex-1 max-w-xs">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-500" />
               <input
                 type="text"
                 value={searchQuery}
@@ -576,7 +576,7 @@ export default function Dashboard() {
 
               {/* Filter */}
               <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-ink-400" />
+                <Filter className="h-4 w-4 text-ink-500" />
                 <div className="flex gap-1 rounded-lg bg-ink-100 p-1">
                   <button
                     onClick={() => setFilter('all')}
@@ -632,7 +632,7 @@ export default function Dashboard() {
           </div>
         ) : meetingGroups.length === 0 ? (
           <div className="card p-12 text-center">
-            <Scan className="mx-auto mb-3 h-10 w-10 text-ink-400" />
+            <Scan className="mx-auto mb-3 h-10 w-10 text-ink-500" />
             <p className="text-ink-600">No races available for today.</p>
             <p className="mt-1 text-sm text-ink-600">The model is waiting for race data to be published.</p>
           </div>
@@ -661,30 +661,32 @@ export default function Dashboard() {
                       </div>
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         <MapPin className="h-4 w-4 text-amber-400 flex-shrink-0" />
-                        <h2 className="font-display text-lg tracking-wide text-ink-50 group-hover:text-amber-400 transition-colors truncate">
+                        <h2 className="font-display text-base sm:text-lg tracking-wide text-ink-50 group-hover:text-amber-400 transition-colors truncate">
                           {meeting.venue_name}
                         </h2>
                         <span className="badge bg-ink-800 text-ink-300 flex-shrink-0">{meeting.state}</span>
-                        <span className="mono text-sm text-ink-400 hidden sm:inline">{meeting.venue_code}</span>
+                        <span className="mono text-sm text-ink-400 hidden md:inline">{meeting.venue_code}</span>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-shrink-0">
                         {meetingHighConf > 0 && (
                           <span className="badge bg-green-900/40 text-green-400 border border-green-800">
                             <TrendingUp className="h-3 w-3" />
-                            {meetingHighConf} HIGH
+                            <span className="hidden sm:inline">{meetingHighConf} HIGH</span>
+                            <span className="sm:hidden">{meetingHighConf}</span>
                           </span>
                         )}
                         {meetingFalseFav > 0 && (
                           <span className="badge bg-amber-900/40 text-amber-400 border border-amber-800">
                             <AlertTriangle className="h-3 w-3" />
-                            {meetingFalseFav} FF
+                            <span className="hidden sm:inline">{meetingFalseFav} FF</span>
+                            <span className="sm:hidden">{meetingFalseFav}</span>
                           </span>
                         )}
-                        <span className="mono text-sm text-ink-400 flex-shrink-0 hidden sm:inline">
+                        <span className="mono text-sm text-ink-400 flex-shrink-0 hidden md:inline">
                           {meetingRaces.length} race{meetingRaces.length !== 1 ? 's' : ''}
                         </span>
                       </div>
-                      <span className="mono text-sm text-ink-400 sm:hidden flex-shrink-0">
+                      <span className="mono text-sm text-ink-400 md:hidden flex-shrink-0">
                         {meetingRaces.length}
                       </span>
                     </button>

@@ -66,7 +66,7 @@ export function confidenceBadge(confidence: string | null): { label: string; cla
     case 'Medium':
       return { label: 'MED', classes: 'bg-ink-100 text-ink-600' };
     default:
-      return { label: 'LOW', classes: 'bg-ink-50 text-ink-400' };
+      return { label: 'LOW', classes: 'bg-ink-100 text-ink-600' };
   }
 }
 

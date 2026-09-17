@@ -68,7 +68,7 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
       {/* Compact header — clickable to expand inline */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="flex w-full items-center gap-3 p-4 text-left"
+        className="flex w-full items-center gap-2 p-3 sm:gap-3 sm:p-4 text-left"
       >
         {/* Expand indicator */}
         <div className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-ink-100 transition-all ${expanded ? 'bg-amber-100' : ''}`}>
@@ -77,8 +77,8 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
 
         {/* Race number badge */}
         <div className="flex-shrink-0">
-          <div className="flex items-baseline gap-2">
-            <span className="mono text-2xl font-bold text-ink-900">R{race.race_number}</span>
+          <div className="flex items-baseline gap-1.5 sm:gap-2">
+            <span className="mono text-xl sm:text-2xl font-bold text-ink-900">R{race.race_number}</span>
             <InfoTip
               label={race.grade ?? ''}
               tip="Grade classification for this race. Higher grade = stronger field. Maidens are for dogs yet to win a race."
@@ -93,20 +93,20 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
         </div>
 
         {/* Probable winner */}
-        <div className="ml-2 flex-1 min-w-0">
+        <div className="ml-1 sm:ml-2 flex-1 min-w-0">
           {race.probable_winner_name && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <InfoTip
                 label={`Box ${race.probable_winner_box}`}
                 tip="The starting box (trap) number. Box 1 is inside (rail), Box 8 is outside. Inside boxes generally have a slight advantage, especially at shorter distances."
-                className="mono inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-ink-900 text-xs font-bold text-ink-50 shadow-sm"
+                className="mono inline-flex h-6 w-6 sm:h-7 sm:w-7 flex-shrink-0 items-center justify-center rounded-lg bg-ink-900 text-[10px] sm:text-xs font-bold text-ink-50 shadow-sm"
               />
-              <span className="truncate font-semibold text-ink-900">{race.probable_winner_name}</span>
+              <span className="truncate text-sm sm:text-base font-semibold text-ink-900">{race.probable_winner_name}</span>
             </div>
           )}
           <div className="mt-1 flex items-center gap-2">
             {race.probable_winner_win_pct != null && (
-              <span className="mono text-lg font-bold text-ink-900">
+              <span className="mono text-base sm:text-lg font-bold text-ink-900">
                 {fmtPct(race.probable_winner_win_pct, 0)}
               </span>
             )}
@@ -119,7 +119,7 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
         {/* Timer */}
         <div className="flex-shrink-0 text-right">
           <div
-            className={`mono text-sm font-semibold transition-colors ${
+            className={`mono text-xs sm:text-sm font-semibold transition-colors ${
               isStartingSoon
                 ? 'text-amber-600 animate-pulseSubtle'
                 : isInProgress
@@ -131,12 +131,12 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
           >
             {countdown}
           </div>
-          <div className="mono text-xs text-ink-500">{postTime} AEST</div>
+          <div className="mono text-xs text-ink-500 hidden sm:block">{postTime} AEST</div>
         </div>
       </button>
 
       {/* Tags row */}
-      <div className="flex flex-wrap items-center gap-2 px-4 pb-3">
+      <div className="flex flex-wrap items-center gap-2 px-3 sm:px-4 pb-3">
         {race.false_fav_flag && (
           <span className="badge inline-flex items-center gap-1 bg-amber-100 text-amber-700 animate-scaleIn border border-amber-200">
             <AlertTriangle className="h-3 w-3" />
@@ -161,8 +161,8 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
         {/* Runner count + field avg */}
         <div className="flex items-center gap-2 text-xs text-ink-500">
           <span className="mono">{runners.length} runners</span>
-          <span className="text-ink-400">·</span>
-          <span className="mono">field avg {fieldAvg.toFixed(1)}%</span>
+          <span className="text-ink-300">·</span>
+          <span className="mono hidden sm:inline">field avg {fieldAvg.toFixed(1)}%</span>
         </div>
         <span className="mono text-xs text-ink-500 ml-auto hidden sm:inline">
           {expanded ? 'Tap to collapse' : 'Tap to expand'}
@@ -174,7 +174,7 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
         <div className="animate-slideDown border-t border-ink-100">
           {/* False fav reason banner */}
           {race.false_fav_flag && race.false_fav_reason && (
-            <div className="mx-4 mt-4 flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 animate-fadeIn">
+            <div className="mx-3 sm:mx-4 mt-4 flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 animate-fadeIn">
               <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-amber-100">
                 <AlertTriangle className="h-4 w-4 text-amber-600" />
               </div>
@@ -186,7 +186,7 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
           )}
 
           {/* Top 3 model picks — card style */}
-          <div className="px-4 pt-4">
+          <div className="px-3 sm:px-4 pt-4">
             <h4 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-500">
               <Target className="h-3.5 w-3.5" />
               Model Top 3
@@ -224,13 +224,13 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
           </div>
 
           {/* Probability distribution chart + Speed map */}
-          <div className="px-4 pt-4 space-y-3">
+          <div className="px-3 sm:px-4 pt-4 space-y-3">
             <ProbabilityChart runners={runners} />
             <SpeedMap runners={runners} distanceM={race.distance_m} />
           </div>
 
           {/* Full runner table */}
-          <div className="px-4 pt-4">
+          <div className="px-3 sm:px-4 pt-4">
             <h4 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-500">
               <Gauge className="h-3.5 w-3.5" />
               Full Runner Table
@@ -239,7 +239,7 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
           </div>
 
           {/* Exotic suggestions — collapsed by default */}
-          <div className="mx-4 mb-4 border-t border-ink-100 pt-3">
+          <div className="mx-3 sm:mx-4 mb-4 border-t border-ink-100 pt-3">
             <button
               onClick={() => setShowExotics(!showExotics)}
               className="group flex items-center gap-2 text-sm font-semibold text-ink-700 transition-colors hover:text-ink-900"
@@ -282,7 +282,7 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
           </div>
 
           {/* Full race page link — at the bottom of the expanded section */}
-          <div className="border-t border-ink-100 px-4 py-3">
+          <div className="border-t border-ink-100 px-3 sm:px-4 py-3">
             <Link
               to={`/race/${race.id}`}
               className="btn-ghost text-xs group ml-auto flex w-fit"
