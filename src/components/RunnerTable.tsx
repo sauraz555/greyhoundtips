@@ -9,54 +9,61 @@ export default function RunnerTable({ runners }: Props) {
   const sorted = [...runners].sort((a, b) => a.box - b.box);
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto rounded-xl border border-ink-100">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-ink-200 text-left text-xs uppercase tracking-wide text-ink-400">
-            <th className="py-2 pr-3 font-semibold">Box</th>
-            <th className="py-2 pr-3 font-semibold">Runner</th>
-            <th className="py-2 pr-3 font-semibold">Trainer</th>
-            <th className="py-2 pr-3 text-right font-semibold">Price</th>
-            <th className="py-2 pr-3 text-right font-semibold">Win %</th>
-            <th className="py-2 text-right font-semibold">Top 4 %</th>
+          <tr className="border-b border-ink-200 bg-ink-50 text-left text-xs uppercase tracking-wide text-ink-400">
+            <th className="py-2.5 pl-3 pr-3 font-semibold">Box</th>
+            <th className="py-2.5 pr-3 font-semibold">Runner</th>
+            <th className="py-2.5 pr-3 font-semibold hidden sm:table-cell">Trainer</th>
+            <th className="py-2.5 pr-3 text-right font-semibold">Price</th>
+            <th className="py-2.5 pr-3 text-right font-semibold">Win %</th>
+            <th className="py-2.5 pr-3 text-right font-semibold hidden sm:table-cell">Top 4 %</th>
           </tr>
         </thead>
         <tbody>
-          {sorted.map((r, idx) => {
+          {sorted.map((r) => {
             const winPct = toNum(r.win_pct);
-            const isTop = idx === 0 || winPct >= 40;
+            const isTop = winPct >= 40;
+            const isSecond = winPct >= 25 && winPct < 40;
             return (
               <tr
                 key={r.id}
-                className={`border-b border-ink-100 transition-all hover:bg-ink-50 hover:shadow-sm ${
+                className={`border-b border-ink-100 transition-all hover:bg-amber-50/30 ${
                   r.is_false_fav ? 'bg-amber-50/50' : ''
-                }`}
+                } ${isTop ? 'bg-amber-50/20' : ''}`}
               >
-                <td className="py-2.5 pr-3">
-                  <span className={`mono inline-flex h-7 w-7 items-center justify-center rounded-md text-xs font-bold transition-transform hover:scale-110 ${
-                    isTop ? 'bg-amber-500 text-ink-900' : 'bg-ink-900 text-ink-50'
+                <td className="py-3 pl-3 pr-3">
+                  <span className={`mono inline-flex h-8 w-8 items-center justify-center rounded-lg text-xs font-bold transition-transform hover:scale-110 ${
+                    isTop ? 'bg-amber-500 text-ink-900 shadow-sm shadow-amber-500/20'
+                      : isSecond ? 'bg-ink-700 text-ink-50'
+                      : 'bg-ink-900 text-ink-50'
                   }`}>
                     {r.box}
                   </span>
                 </td>
-                <td className="py-2.5 pr-3">
-                  <span className="font-medium text-ink-900">{r.name}</span>
-                  {r.is_false_fav && (
-                    <span className="ml-2 inline-flex items-center rounded bg-amber-100 px-1.5 py-0.5 text-xs font-semibold text-amber-700">
-                      False Fav
-                    </span>
-                  )}
+                <td className="py-3 pr-3">
+                  <div className="flex items-center gap-2">
+                    <span className={`font-medium ${isTop ? 'text-ink-900 font-semibold' : 'text-ink-900'}`}>{r.name}</span>
+                    {r.is_false_fav && (
+                      <span className="inline-flex items-center rounded bg-amber-100 px-1.5 py-0.5 text-xs font-semibold text-amber-700 border border-amber-200">
+                        False Fav
+                      </span>
+                    )}
+                  </div>
                 </td>
-                <td className="py-2.5 pr-3 text-ink-500">{r.trainer ?? '—'}</td>
-                <td className="mono py-2.5 pr-3 text-right text-ink-700">
+                <td className="py-3 pr-3 text-ink-500 hidden sm:table-cell">{r.trainer ?? '—'}</td>
+                <td className="mono py-3 pr-3 text-right text-ink-700">
                   {fmtPrice(r.price)}
                 </td>
-                <td className="mono py-2.5 pr-3 text-right">
+                <td className="mono py-3 pr-3 text-right">
                   <div className="flex items-center justify-end gap-2">
-                    <div className="h-1.5 w-16 overflow-hidden rounded-full bg-ink-100">
+                    <div className="h-2 w-16 overflow-hidden rounded-full bg-ink-100">
                       <div
                         className={`h-full rounded-full transition-all duration-700 ease-out ${
-                          isTop ? 'bg-gradient-to-r from-amber-400 to-amber-500' : 'bg-ink-400'
+                          isTop ? 'bg-gradient-to-r from-amber-400 to-amber-500'
+                            : isSecond ? 'bg-ink-600'
+                            : 'bg-ink-400'
                         }`}
                         style={{ width: `${winPct}%` }}
                       />
@@ -66,7 +73,7 @@ export default function RunnerTable({ runners }: Props) {
                     </span>
                   </div>
                 </td>
-                <td className="mono py-2.5 text-right text-ink-500">
+                <td className="mono py-3 pr-3 text-right text-ink-500 hidden sm:table-cell">
                   {fmtPct(r.top4_pct)}
                 </td>
               </tr>
