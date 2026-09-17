@@ -30,7 +30,7 @@ export default function Landing() {
       <header
         className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? 'border-b border-ink-200 bg-ink-50/95 backdrop-blur-sm shadow-sm' : 'bg-transparent'}`}
       >
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 text-black [&_*]:!text-black">
           <Link to="/" className="group flex items-center gap-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500 shadow-md shadow-amber-500/20 transition-transform group-hover:scale-110">
               <PawPrint className="h-5 w-5 text-ink-900" />
