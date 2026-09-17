@@ -41,6 +41,7 @@ export interface Profile {
   id: string;
   email: string;
   age_confirmed: boolean;
+  email_picks_opt_in: boolean;
   created_at: string;
 }
 

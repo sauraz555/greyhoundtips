@@ -2,11 +2,12 @@ import { useEffect, useState, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ChevronDown, ChevronRight, AlertCircle, Filter, RefreshCw, MapPin, Radio,
-  Activity, AlertTriangle, TrendingUp, Scan, Search, ArrowUpDown, Flame,
+  Activity, AlertTriangle, TrendingUp, Scan, Search, ArrowUpDown, Flame, Lock,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { Meeting, Race, Runner } from '@/types/database';
 import { getRaceStatus, toNum, getAESTDate, fmtPct } from '@/lib/raceUtils';
+import { useAuth } from '@/context/AuthContext';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import RaceCard from '@/components/RaceCard';
@@ -89,6 +90,8 @@ interface TopPick {
 }
 
 export default function Dashboard() {
+  const { subscription } = useAuth();
+  const isPaid = subscription?.status === 'trialing' || subscription?.status === 'active' || subscription?.status === 'past_due';
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [races, setRaces] = useState<Race[]>([]);
   const [runners, setRunners] = useState<Record<string, Runner[]>>({});
@@ -549,8 +552,36 @@ export default function Dashboard() {
           </span>
         </div>
 
-        {/* Search + Sort + Filter bar */}
-        {!loading && totalRaces > 0 && (
+        {/* Paywall for free users — full race list requires subscription */}
+        {!loading && totalRaces > 0 && !isPaid && (
+          <div className="mb-6 animate-fadeInUp">
+            <div className="card border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-ink-50 p-8 text-center">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-amber-100">
+                <Lock className="h-7 w-7 text-amber-600" />
+              </div>
+              <h3 className="font-display text-xl tracking-wide text-ink-900">UNLOCK ALL RACES</h3>
+              <p className="mx-auto mt-2 max-w-md text-sm text-ink-500 leading-relaxed">
+                You're seeing the model's top 3 picks for free. Subscribe to access every race
+                across all meetings — full runner data, speed maps, probability charts, and
+                false-favourite analysis.
+              </p>
+              <div className="mt-4 flex items-center justify-center gap-2">
+                <span className="mono text-2xl font-bold text-ink-900">$25</span>
+                <span className="text-ink-500">/month</span>
+                <span className="text-ink-500">·</span>
+                <span className="text-sm font-medium text-amber-600">3-day free trial</span>
+              </div>
+              <Link to="/subscribe" className="btn-primary mt-4 inline-flex">
+                Start free trial
+                <ChevronRight className="h-4 w-4" />
+              </Link>
+              <p className="mt-2 text-xs text-ink-500">No charge for 3 days. Cancel anytime.</p>
+            </div>
+          </div>
+        )}
+
+        {/* Search + Sort + Filter bar — only for paid users */}
+        {!loading && totalRaces > 0 && isPaid && (
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between animate-fadeIn">
             {/* Search */}
             <div className="relative flex-1 max-w-xs">
@@ -619,7 +650,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Content */}
+        {/* Content — full race list only for paid users */}
         {loading ? (
           <div className="space-y-3">
             {[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}
@@ -629,6 +660,12 @@ export default function Dashboard() {
             <AlertCircle className="mx-auto mb-3 h-8 w-8 text-red-400" />
             <p>{error}</p>
             <button onClick={() => fetchData()} className="btn-secondary mt-4">Try again</button>
+          </div>
+        ) : !isPaid ? (
+          <div className="py-4 text-center">
+            <p className="text-sm text-ink-500">
+              Subscribe to unlock all {totalRaces} races across {meetings.length} meetings.
+            </p>
           </div>
         ) : meetingGroups.length === 0 ? (
           <div className="card p-12 text-center">

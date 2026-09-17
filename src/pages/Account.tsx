@@ -1,18 +1,21 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, LogOut, Trash2, AlertCircle, Shield, CreditCard, ExternalLink, Loader2 } from 'lucide-react';
+import { Mail, LogOut, Trash2, AlertCircle, Shield, CreditCard, ExternalLink, Loader2, Bell, Check } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 
 export default function Account() {
-  const { user, profile, subscription, signOut } = useAuth();
+  const { user, profile, subscription, signOut, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const [showDelete, setShowDelete] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
+  const [emailOptIn, setEmailOptIn] = useState(profile?.email_picks_opt_in ?? false);
+  const [emailSaving, setEmailSaving] = useState(false);
+  const [emailSaved, setEmailSaved] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -84,6 +87,26 @@ export default function Account() {
       setError(message);
       setPortalLoading(false);
     }
+  };
+
+  const handleToggleEmailOptIn = async () => {
+    setError(null);
+    setEmailSaving(true);
+    const newValue = !emailOptIn;
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({ email_picks_opt_in: newValue })
+      .eq('id', user?.id ?? '');
+    if (updateError) {
+      setError('Could not update email preferences. Please try again.');
+      setEmailSaving(false);
+      return;
+    }
+    setEmailOptIn(newValue);
+    await refreshProfile();
+    setEmailSaving(false);
+    setEmailSaved(true);
+    setTimeout(() => setEmailSaved(false), 3000);
   };
 
   const isActive = subscription?.status === 'trialing' || subscription?.status === 'active' || subscription?.status === 'past_due';
@@ -217,6 +240,56 @@ export default function Account() {
                   </div>
                 </button>
               )}
+            </div>
+          </div>
+
+          {/* Daily picks email */}
+          <div className="card p-6">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100">
+                <Bell className="h-6 w-6 text-amber-600" />
+              </div>
+              <div>
+                <p className="text-sm text-ink-500">Daily Picks Email</p>
+                <p className="font-semibold text-ink-900">Top 3 picks delivered to your inbox</p>
+              </div>
+            </div>
+
+            <p className="mt-4 text-sm text-ink-500 leading-relaxed">
+              Get the model's top 3 picks for the day with full analysis — win probability,
+              confidence rating, and false-favourite flags. Sent before the first race.
+              Available to all registered users.
+            </p>
+
+            <div className="mt-4 flex items-center justify-between border-t border-ink-100 pt-4">
+              <div className="flex items-center gap-2">
+                <span className={`text-sm font-medium ${emailOptIn ? 'text-green-600' : 'text-ink-500'}`}>
+                  {emailOptIn ? 'Opted in' : 'Opted out'}
+                </span>
+                {emailSaved && (
+                  <span className="flex items-center gap-1 text-xs text-green-600 animate-fadeIn">
+                    <Check className="h-3 w-3" />
+                    Saved
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={handleToggleEmailOptIn}
+                disabled={emailSaving}
+                className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
+                  emailOptIn ? 'bg-green-500' : 'bg-ink-200'
+                }`}
+              >
+                {emailSaving ? (
+                  <Loader2 className="absolute left-1/2 h-4 w-4 -translate-x-1/2 text-ink-500 animate-spin" />
+                ) : (
+                  <span
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform ${
+                      emailOptIn ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                )}
+              </button>
             </div>
           </div>
 
