@@ -27,7 +27,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       setUser(data.session?.user ?? null);
-      setLoading(false);
+      if (!data.session) {
+        setLoading(false);
+      }
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
@@ -37,6 +39,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!newSession) {
           setProfile(null);
           setSubscription(null);
+          setLoading(false);
+        } else {
+          setLoading(true);
         }
       })();
     });
@@ -50,21 +55,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSubscription(null);
       return;
     }
+    let cancelled = false;
     (async () => {
-      const { data } = await supabase
+      const { data: profileData } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .maybeSingle();
-      setProfile(data as Profile | null);
+      if (!cancelled) setProfile(profileData as Profile | null);
 
       const { data: subData } = await supabase
         .from('subscriptions')
         .select('*')
         .eq('user_id', user.id)
         .maybeSingle();
-      setSubscription(subData as Subscription | null);
+      if (!cancelled) {
+        setSubscription(subData as Subscription | null);
+        setLoading(false);
+      }
     })();
+    return () => { cancelled = true; };
   }, [user]);
 
   const refreshProfile = async () => {

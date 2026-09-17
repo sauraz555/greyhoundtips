@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { PawPrint, AlertCircle } from 'lucide-react';
+import { PawPrint, AlertCircle, Sparkles } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import Footer from '@/components/Footer';
 
@@ -30,7 +30,17 @@ export default function Login() {
     }
 
     if (data.session) {
-      navigate('/dashboard');
+      const { data: subData } = await supabase
+        .from('subscriptions')
+        .select('status')
+        .eq('user_id', data.session.user.id)
+        .maybeSingle();
+      const status = subData?.status;
+      if (status === 'trialing' || status === 'active' || status === 'past_due') {
+        navigate('/dashboard');
+      } else {
+        navigate('/subscribe');
+      }
     }
     setLoading(false);
   };
@@ -50,7 +60,11 @@ export default function Login() {
 
           <div className="card p-6 sm:p-8">
             <h1 className="font-display text-2xl tracking-wide text-ink-900">LOG IN</h1>
-            <p className="mt-1 text-sm text-ink-500">Access today's model picks.</p>
+            <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700">
+              <Sparkles className="h-3 w-3" />
+              3-day free trial for new members
+            </div>
+            <p className="mt-2 text-sm text-ink-500">Access today's model picks and race analysis.</p>
 
             {message && (
               <div className="mt-4 rounded-lg bg-green-50 p-3 text-sm text-green-700">

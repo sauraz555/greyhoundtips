@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { PawPrint, TrendingUp, Clock, AlertTriangle, Check, ArrowRight, BarChart3, Zap, Eye, Activity, Target, Gauge } from 'lucide-react';
+import { PawPrint, TrendingUp, Clock, AlertTriangle, Check, ArrowRight, BarChart3, Zap, Eye, Activity, Target, Gauge, Sparkles } from 'lucide-react';
 import Footer from '@/components/Footer';
 
 const HERO_IMG = 'https://images.pexels.com/photos/28457519/pexels-photo-28457519.jpeg?auto=compress&cs=tinysrgb&w=1600';
@@ -54,6 +54,12 @@ export default function Landing() {
             updated live as races approach post time.
           </p>
 
+          {/* Trial badge */}
+          <div className="mt-6 inline-flex items-center gap-2 rounded-full bg-amber-500/20 px-4 py-2 backdrop-blur-sm animate-fadeInUp stagger-1">
+            <Sparkles className="h-4 w-4 text-amber-400" />
+            <span className="text-sm font-medium text-amber-100">3-day free trial — full access, no charge</span>
+          </div>
+
           {/* Stats strip */}
           <div className="mt-8 flex flex-wrap gap-6 animate-fadeInUp stagger-2">
             <div className="flex items-center gap-2">
@@ -102,9 +108,13 @@ export default function Landing() {
               onClick={() => navigate('/signup')}
               className="btn-primary mt-4 w-full text-base group"
             >
-              Sign up free
+              Start 3-day free trial
               <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
             </button>
+
+            <p className="mt-3 text-center text-xs text-ink-400">
+              No charge for 3 days. Cancel anytime.
+            </p>
 
             <p className="mt-3 text-center text-sm text-ink-300">
               Already have an account?{' '}
@@ -216,12 +226,21 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Disclaimer band */}
-      <section className="bg-ink-900 py-8">
+      {/* Trial + Disclaimer band */}
+      <section className="bg-ink-900 py-10">
         <div className="mx-auto max-w-6xl px-4">
-          <p className="text-center text-sm text-ink-300">
+          <div className="mb-4 flex items-center justify-center gap-2">
+            <Sparkles className="h-5 w-5 text-amber-400" />
+            <span className="font-display text-lg tracking-wide text-ink-100">3-DAY FREE TRIAL</span>
+            <Sparkles className="h-5 w-5 text-amber-400" />
+          </div>
+          <p className="text-center text-sm text-ink-300 mb-3">
+            Full access to every race, every model pick, every speed map.
+            No charge for 3 days, then $25/month. Cancel anytime.
+          </p>
+          <p className="text-center text-xs text-ink-400">
             Greyhound Edge provides model-generated statistical analysis for
-            informational purposes only. This is <span className="font-semibold text-ink-100">not financial
+            informational purposes only. This is <span className="font-semibold text-ink-200">not financial
             or betting advice</span>. No outcome is guaranteed. Please gamble responsibly.
           </p>
         </div>

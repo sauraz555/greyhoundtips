@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { PawPrint, Check, AlertCircle } from 'lucide-react';
+import { PawPrint, Check, AlertCircle, Sparkles } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import Footer from '@/components/Footer';
 
@@ -52,7 +52,7 @@ export default function Signup() {
     }
 
     if (data.session) {
-      navigate('/dashboard');
+      navigate('/subscribe');
     } else {
       navigate('/login', {
         state: {
@@ -78,7 +78,11 @@ export default function Signup() {
 
           <div className="card p-6 sm:p-8">
             <h1 className="font-display text-2xl tracking-wide text-ink-900">CREATE ACCOUNT</h1>
-            <p className="mt-1 text-sm text-ink-500">Free access to daily model picks.</p>
+            <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700">
+              <Sparkles className="h-3 w-3" />
+              3-day free trial included
+            </div>
+            <p className="mt-2 text-sm text-ink-500">Full access to every race, every model pick.</p>
 
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">
               <div>
