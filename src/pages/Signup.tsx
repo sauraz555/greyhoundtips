@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { PawPrint, Check, AlertCircle, Sparkles } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import Footer from '@/components/Footer';
+import SEO from '@/components/SEO';
 
 export default function Signup() {
   const [email, setEmail] = useState('');
@@ -65,6 +66,7 @@ export default function Signup() {
 
   return (
     <div className="flex min-h-screen flex-col bg-ink-50">
+      <SEO title="Sign Up — Free Greyhound Racing Tips & Predictions | Greyhound Edge" description="Create your free Greyhound Edge account and get a 3-day free trial. Access model-generated greyhound racing tips, probable winners, confidence ratings, and speed maps for every Australian meeting." canonicalPath="/signup" noIndex />
       <div className="flex flex-1 items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
           <Link to="/" className="mb-8 flex items-center justify-center gap-2">

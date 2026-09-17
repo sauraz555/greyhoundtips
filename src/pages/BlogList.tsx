@@ -1,11 +1,40 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Clock, PawPrint } from 'lucide-react';
 import Footer from '@/components/Footer';
+import SEO from '@/components/SEO';
 import { blogPosts } from '@/lib/blogPosts';
+
+const blogListJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Blog',
+  name: 'Greyhound Edge Blog',
+  description: 'Deep-dives into greyhound racing history, breeding, track architecture, sectional timing, and quantitative methods that power the Greyhound Edge prediction model.',
+  url: 'https://greyhoundedge.com/blog',
+  publisher: {
+    '@type': 'Organization',
+    name: 'Greyhound Edge',
+    url: 'https://greyhoundedge.com',
+  },
+  blogPost: blogPosts.map((post) => ({
+    '@type': 'BlogPosting',
+    headline: post.title,
+    description: post.excerpt,
+    datePublished: '2026-09-17',
+    author: { '@type': 'Organization', name: post.author },
+    url: `https://greyhoundedge.com/blog/${post.slug}`,
+  })),
+};
 
 export default function BlogList() {
   return (
     <div className="flex min-h-screen flex-col bg-ink-50">
+      <SEO
+        title="Greyhound Racing Blog — Tips, Predictions, Form Analysis & Breeding | Greyhound Edge"
+        description="In-depth articles on Australian greyhound racing: predictive modelling, machine learning, track architecture, sectional timing, breeding bloodlines, Fernando Bale, Tommy Shelby, and form analysis methodology."
+        keywords="greyhound racing blog, greyhound racing analysis, greyhound racing predictions, greyhound breeding, Fernando Bale, Tommy Shelby, greyhound sire lines, greyhound sectional timing, greyhound track geometry, greyhound form analysis, Australian greyhound racing history, greyhound racing machine learning"
+        canonicalPath="/blog"
+        jsonLd={blogListJsonLd}
+      />
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-ink-200 bg-ink-50/95 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
@@ -28,7 +57,7 @@ export default function BlogList() {
         {/* Page header */}
         <div className="mb-10 text-center">
           <span className="text-sm font-semibold uppercase tracking-wider text-amber-600">
-            Engineering Blog
+            Greyhound Racing Blog
           </span>
           <h1 className="mt-2 font-display text-4xl tracking-wide text-ink-900 sm:text-5xl">
             THE <span className="text-gradient-amber">SCIENCE</span> BEHIND THE MODEL

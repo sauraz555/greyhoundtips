@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { PawPrint, AlertCircle, Sparkles } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import Footer from '@/components/Footer';
+import SEO from '@/components/SEO';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -46,6 +47,7 @@ export default function Login() {
 
   return (
     <div className="flex min-h-screen flex-col bg-ink-50">
+      <SEO title="Log In — Greyhound Edge" description="Log in to access your greyhound racing model picks, predictions, and form analysis dashboard." canonicalPath="/login" noIndex />
       <div className="flex flex-1 items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
           <Link to="/" className="mb-8 flex items-center justify-center gap-2">

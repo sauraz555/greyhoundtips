@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
+import SEO from '@/components/SEO';
 
 const PRICE_ID = 'price_1UGdvdK5ffGf1vlHcnVqKF3o';
 
@@ -72,6 +73,7 @@ export default function Subscribe() {
 
   return (
     <div className="flex min-h-screen flex-col bg-ink-50">
+      <SEO title="Subscribe — Greyhound Racing Tips Subscription | Greyhound Edge" description="Subscribe to Greyhound Edge for $25/month with a 3-day free trial. Full access to model-generated greyhound racing predictions, probable winners, speed maps, and false-favourite analysis for every Australian meeting." canonicalPath="/subscribe" noIndex />
       <Nav />
       <div className="mx-auto w-full max-w-2xl flex-1 px-4 py-12">
         {/* Checkout status banner */}

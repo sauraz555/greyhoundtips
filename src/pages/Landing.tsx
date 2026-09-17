@@ -6,6 +6,93 @@ import {
   ChevronDown, Menu, X,
 } from 'lucide-react';
 import Footer from '@/components/Footer';
+import SEO from '@/components/SEO';
+
+const landingJsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    name: 'Greyhound Edge',
+    serviceType: 'Greyhound Racing Predictions and Form Analysis',
+    areaServed: { '@type': 'Country', name: 'Australia' },
+    description: 'Model-generated greyhound racing tips, probable winners, confidence ratings, false-favourite detection, and speed maps for Australian greyhound tracks including Wentworth Park, Sandown, Angle Park, The Meadows, and more.',
+    offers: {
+      '@type': 'Offer',
+      price: '25.00',
+      priceCurrency: 'AUD',
+      description: 'Monthly subscription with 3-day free trial',
+    },
+    knowsAbout: [
+      'Greyhound Racing Tips',
+      'Greyhound Racing Predictions',
+      'Greyhound Form Analysis',
+      'Speed Maps',
+      'False Favourite Detection',
+      'Probable Winners',
+      'Australian Greyhound Racing',
+      'Wentworth Park',
+      'Sandown Park',
+      'Angle Park',
+      'The Meadows',
+      'Greyhound Racing Statistics',
+      'Machine Learning Greyhound Racing',
+    ],
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: 'What happens when the 3-day trial ends?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Your card is automatically charged $25/month starting on day 4. You keep full access to every race, every model pick, and every feature. You can cancel at any time before the trial ends and you will not be charged.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'How do I cancel?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Log in, go to Account, and click Cancel Subscription. You keep access until the end of your current billing period. There is no lock-in contract — cancel anytime, no questions asked.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'What data feeds the greyhound racing model?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'The model combines four data sources: speed maps (box-by-box early speed projections from historical sectional times), form analysis (recent starts, finishing positions, margin data, and grade-level performance weighted by recency), market comparison (model probability vs market price to identify value and false favourites), and historical patterns (track-specific win rates by box, distance, and grade, built from thousands of past races).',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Is this betting advice?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'No. Greyhound Edge provides statistical analysis for informational purposes only. It is not financial or betting advice. No outcome is guaranteed. Past performance does not guarantee future results. Please gamble responsibly.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Which Australian greyhound tracks do you cover?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'All major Australian greyhound tracks including Wentworth Park, Sandown, Angle Park, The Meadows, Richmond, Albion Park, Cannington, Healesville, and more. The dashboard updates daily with every available meeting.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Can I use this on my phone?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Yes. The dashboard is fully responsive and designed for checking races between meetings on a phone. Race cards expand inline without losing your scroll position.',
+        },
+      },
+    ],
+  },
+];
 
 export default function Landing() {
   const [ageConfirmed, setAgeConfirmed] = useState(false);
@@ -26,6 +113,13 @@ export default function Landing() {
 
   return (
     <div className="flex min-h-screen flex-col bg-ink-50">
+      <SEO
+        title="Greyhound Edge — Australian Greyhound Racing Tips, Predictions & Form Analysis"
+        description="Free daily greyhound racing tips and model-generated predictions for Australian tracks. Probable winners, confidence ratings, false-favourite detection, speed maps and form analysis for Wentworth Park, Sandown, Angle Park, The Meadows and more. 18+. Not betting advice."
+        keywords="greyhound racing tips, greyhound predictions, Australian greyhound racing, greyhound form analysis, greyhound betting tips, dog racing tips Australia, greyhound racing model, probable winners greyhound, false favourite greyhound, speed maps greyhound, greyhound racing picks, Wentworth Park tips, Sandown greyhound tips, Angle Park tips, The Meadows greyhound, greyhound racing free tips, daily greyhound tips, greyhound racing statistics, greyhound racing AI"
+        canonicalPath="/"
+        jsonLd={landingJsonLd}
+      />
       {/* ─── Persistent Header ─── */}
       <header
         className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? 'border-b border-ink-200 bg-ink-50/95 backdrop-blur-sm shadow-sm' : 'bg-transparent'}`}
@@ -133,15 +227,16 @@ export default function Landing() {
             {/* Left: copy + CTA */}
             <div>
               <h1 className="font-display text-4xl leading-[1.05] tracking-wide text-ink-50 sm:text-5xl lg:text-6xl animate-fadeInUp">
-                MODEL PICKS.<br />
-                <span className="text-gradient-amber">EVERY RACE.</span><br />
+                GREYHOUND RACING<br />
+                <span className="text-gradient-amber">TIPS & PREDICTIONS</span><br />
                 EVERY DAY.
               </h1>
 
               <p className="mt-5 max-w-md text-base text-ink-300 animate-fadeInUp stagger-1">
-                Statistical analysis for Australian greyhound racing.
+                Free daily model-generated picks for Australian greyhound racing.
                 Probable winners, confidence ratings, false-favourite detection,
-                and speed maps — updated live as races approach post time.
+                speed maps, and form analysis — updated live as races approach post time.
+                Covering Wentworth Park, Sandown, Angle Park, The Meadows, and every major track.
               </p>
 
               {/* Full offer: trial + price together */}

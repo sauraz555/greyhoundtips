@@ -3,6 +3,7 @@ import {
   ArrowLeft, ArrowRight, Clock, PawPrint, AlertCircle,
 } from 'lucide-react';
 import Footer from '@/components/Footer';
+import SEO from '@/components/SEO';
 import { getPostBySlug, blogPosts } from '@/lib/blogPosts';
 import type { BlogSection } from '@/lib/blogPosts';
 
@@ -165,8 +166,40 @@ export default function BlogArticle() {
 
   const otherPosts = blogPosts.filter((p) => p.slug !== post.slug);
 
+  const articleJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: post.title,
+    description: post.excerpt,
+    image: post.heroImage,
+    datePublished: '2026-09-17',
+    dateModified: '2026-09-17',
+    author: { '@type': 'Organization', name: post.author },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Greyhound Edge',
+      url: 'https://greyhoundedge.com',
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': `https://greyhoundedge.com/blog/${post.slug}`,
+    },
+    keywords: post.category,
+    inLanguage: 'en-AU',
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-ink-50">
+      <SEO
+        title={`${post.title} | Greyhound Edge Blog`}
+        description={post.excerpt}
+        keywords={`greyhound racing, ${post.category}, greyhound racing tips, greyhound form analysis, Australian greyhound racing, greyhound racing predictions, ${post.title}`}
+        canonicalPath={`/blog/${post.slug}`}
+        ogType="article"
+        ogImage={post.heroImage}
+        ogImageAlt={post.heroAlt}
+        jsonLd={articleJsonLd}
+      />
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-ink-200 bg-ink-50/95 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
