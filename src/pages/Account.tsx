@@ -1,17 +1,18 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, LogOut, Trash2, AlertCircle, Shield } from 'lucide-react';
+import { Mail, LogOut, Trash2, AlertCircle, Shield, CreditCard, ExternalLink, Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 
 export default function Account() {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, subscription, signOut } = useAuth();
   const navigate = useNavigate();
   const [showDelete, setShowDelete] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [portalLoading, setPortalLoading] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -25,7 +26,6 @@ export default function Account() {
       return;
     }
 
-    // Delete profile row, then sign out. Auth user deletion requires service role.
     if (!user?.id) {
       setError('Could not delete profile. Please try again.');
       return;
@@ -45,6 +45,53 @@ export default function Account() {
     await signOut();
     navigate('/');
   };
+
+  const handleManageSubscription = async () => {
+    setError(null);
+    setPortalLoading(true);
+
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (!token) {
+        setError('Please log in again.');
+        navigate('/login');
+        return;
+      }
+
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/customer-portal`;
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errBody = await response.json().catch(() => ({}));
+        throw new Error(errBody.error || `Request failed (${response.status})`);
+      }
+
+      const data = await response.json();
+      if (!data.url) {
+        throw new Error('No portal URL returned.');
+      }
+
+      window.location.href = data.url;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Could not open billing portal.';
+      setError(message);
+      setPortalLoading(false);
+    }
+  };
+
+  const isActive = subscription?.status === 'trialing' || subscription?.status === 'active' || subscription?.status === 'past_due';
+  const trialEnd = subscription?.trial_end ? new Date(subscription.trial_end) : null;
+  const daysLeft = trialEnd
+    ? Math.max(0, Math.ceil((trialEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    : 0;
+  const periodEnd = subscription?.current_period_end ? new Date(subscription.current_period_end) : null;
 
   return (
     <div className="flex min-h-screen flex-col bg-ink-50">
@@ -88,6 +135,88 @@ export default function Account() {
                     })
                   : '—'}
               </p>
+            </div>
+          </div>
+
+          {/* Subscription info */}
+          <div className="card p-6">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100">
+                <CreditCard className="h-6 w-6 text-amber-600" />
+              </div>
+              <div>
+                <p className="text-sm text-ink-400">Subscription</p>
+                <p className="font-semibold text-ink-900">
+                  {isActive
+                    ? subscription?.status === 'trialing'
+                      ? `Free trial — ${daysLeft} day${daysLeft === 1 ? '' : 's'} left`
+                      : 'Active — $25/month'
+                    : 'No active subscription'}
+                </p>
+              </div>
+            </div>
+
+            {isActive && (
+              <div className="mt-4 space-y-2 border-t border-ink-100 pt-4 text-sm text-ink-500">
+                {subscription?.status === 'trialing' && trialEnd && (
+                  <div className="flex justify-between">
+                    <span>Trial ends</span>
+                    <span className="mono font-medium text-ink-700">
+                      {trialEnd.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </span>
+                  </div>
+                )}
+                {periodEnd && (
+                  <div className="flex justify-between">
+                    <span>
+                      {subscription?.cancel_at_period_end ? 'Cancels' : 'Renews'}
+                    </span>
+                    <span className="mono font-medium text-ink-700">
+                      {periodEnd.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </span>
+                  </div>
+                )}
+                {subscription?.cancel_at_period_end && (
+                  <div className="mt-2 rounded-lg bg-amber-50 p-2 text-xs text-amber-700">
+                    Your subscription is set to cancel at the end of the current period.
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="mt-4 flex flex-col gap-2 border-t border-ink-100 pt-4">
+              {isActive ? (
+                <button
+                  onClick={handleManageSubscription}
+                  disabled={portalLoading}
+                  className="flex items-center justify-between rounded-lg p-3 text-left transition-colors hover:bg-ink-50"
+                >
+                  <div className="flex items-center gap-3">
+                    {portalLoading ? (
+                      <Loader2 className="h-5 w-5 text-ink-500 animate-spin" />
+                    ) : (
+                      <ExternalLink className="h-5 w-5 text-ink-500" />
+                    )}
+                    <div>
+                      <p className="font-semibold text-ink-900">Manage billing</p>
+                      <p className="text-sm text-ink-400">Update card or cancel via Stripe portal</p>
+                    </div>
+                  </div>
+                </button>
+              ) : (
+                <button
+                  onClick={() => navigate('/subscribe')}
+                  className="flex items-center justify-between rounded-lg p-3 text-left transition-colors hover:bg-amber-50"
+                >
+                  <div className="flex items-center gap-3">
+                    <CreditCard className="h-5 w-5 text-amber-500" />
+                    <div>
+                      <p className="font-semibold text-amber-600">Start subscription</p>
+                      <p className="text-sm text-ink-400">3 days free, then $25/month</p>
+                    </div>
+                  </div>
+                </button>
+              )}
             </div>
           </div>
 

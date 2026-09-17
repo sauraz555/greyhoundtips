@@ -7,6 +7,7 @@ import Login from '@/pages/Login';
 import Dashboard from '@/pages/Dashboard';
 import RaceDetail from '@/pages/RaceDetail';
 import Account from '@/pages/Account';
+import Subscribe from '@/pages/Subscribe';
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/subscribe" element={<Subscribe />} />
           <Route
             path="/dashboard"
             element={
