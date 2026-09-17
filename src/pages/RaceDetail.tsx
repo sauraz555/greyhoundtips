@@ -6,10 +6,6 @@ import type { Race, Runner, Meeting } from '@/types/database';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import RaceCard from '@/components/RaceCard';
-import ModelStatus from '@/components/ModelStatus';
-import ModelInsights from '@/components/ModelInsights';
-
-const HERO_IMG = 'https://images.pexels.com/photos/28506513/pexels-photo-28506513.jpeg?auto=compress&cs=tinysrgb&w=1600';
 
 export default function RaceDetail() {
   const { id } = useParams<{ id: string }>();
@@ -61,13 +57,6 @@ export default function RaceDetail() {
     <div className="flex min-h-screen flex-col bg-ink-50">
       <Nav />
 
-      {/* Hero banner */}
-      <div className="relative h-32 overflow-hidden sm:h-40">
-        <img src={HERO_IMG} alt="Greyhound" className="h-full w-full object-cover" />
-        <div className="absolute inset-0 hero-overlay" />
-        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-b from-transparent to-ink-50" />
-      </div>
-
       <div className="mx-auto w-full max-w-4xl flex-1 px-4 py-6">
         <Link to="/dashboard" className="btn-ghost mb-4 -ml-2 text-sm group">
           <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
@@ -105,17 +94,7 @@ export default function RaceDetail() {
               </div>
             )}
 
-            {/* Model pipeline for this race */}
-            <div className="mb-4 animate-fadeInUp">
-              <ModelStatus />
-            </div>
-
-            {/* Model insights for this race */}
-            <div className="mb-4 animate-fadeInUp stagger-1">
-              <ModelInsights races={race ? [race] : []} runners={runners.length > 0 ? { [race!.id]: runners } : {}} />
-            </div>
-
-            <div className="animate-fadeInUp stagger-2">
+            <div className="animate-fadeInUp">
               <RaceCard race={race} runners={runners} defaultExpanded={true} />
             </div>
 

@@ -53,20 +53,20 @@ export function confidenceColor(confidence: string | null): string {
     case 'High':
       return 'border-l-green-500';
     case 'Medium':
-      return 'border-l-amber-400';
+      return 'border-l-ink-400';
     default:
-      return 'border-l-ink-300';
+      return 'border-l-ink-200';
   }
 }
 
 export function confidenceBadge(confidence: string | null): { label: string; classes: string } {
   switch (confidence) {
     case 'High':
-      return { label: 'High', classes: 'bg-green-100 text-green-700' };
+      return { label: 'HIGH', classes: 'bg-green-100 text-green-700' };
     case 'Medium':
-      return { label: 'Medium', classes: 'bg-amber-100 text-amber-700' };
+      return { label: 'MED', classes: 'bg-ink-100 text-ink-600' };
     default:
-      return { label: 'Low', classes: 'bg-ink-100 text-ink-500' };
+      return { label: 'LOW', classes: 'bg-ink-50 text-ink-400' };
   }
 }
 

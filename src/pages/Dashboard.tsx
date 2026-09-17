@@ -1,21 +1,19 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import {
   ChevronDown, ChevronRight, AlertCircle, Filter, RefreshCw, MapPin, Radio,
-  Activity, AlertTriangle, TrendingUp, Calendar, Flame, Zap, Scan, Cpu,
+  Activity, AlertTriangle, TrendingUp, Scan, Search, ArrowUpDown, Flame,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { Meeting, Race, Runner } from '@/types/database';
-import { getRaceStatus, toNum, getAESTDate } from '@/lib/raceUtils';
+import { getRaceStatus, toNum, getAESTDate, fmtPct } from '@/lib/raceUtils';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import RaceCard from '@/components/RaceCard';
-import ModelStatus from '@/components/ModelStatus';
-import ModelInsights from '@/components/ModelInsights';
 
 type FilterType = 'all' | 'soon' | 'falsefav';
+type SortType = 'time' | 'edge';
 const REFRESH_INTERVAL = 60_000;
-
-const HERO_IMG = 'https://images.pexels.com/photos/28457519/pexels-photo-28457519.jpeg?auto=compress&cs=tinysrgb&w=1600';
 
 interface MeetingGroup {
   meeting: Meeting;
@@ -48,15 +46,11 @@ function ScanningLoader() {
     <div className="flex flex-col items-center justify-center py-20 gap-4">
       <div className="relative">
         <div className="h-16 w-16 animate-spin rounded-full border-2 border-ink-200 border-t-amber-500" />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <Cpu className="h-6 w-6 text-amber-500 animate-pulseSubtle" />
-        </div>
       </div>
       <div className="text-center">
         <p className="font-display text-sm tracking-wide text-ink-700">ANALYZING RACE DATA</p>
         <p className="mono mt-1 text-xs text-amber-600 animate-pulseSubtle">{scanText}</p>
       </div>
-      {/* Scanning bar */}
       <div className="w-48 h-1 rounded-full bg-ink-100 overflow-hidden">
         <div className="h-full w-1/3 rounded-full bg-gradient-to-r from-transparent via-amber-500 to-transparent animate-shimmer" style={{ backgroundSize: '200% 100%' }} />
       </div>
@@ -66,7 +60,7 @@ function ScanningLoader() {
 
 function SkeletonCard() {
   return (
-    <div className="card border-l-4 border-l-ink-200 p-4">
+    <div className="card p-4">
       <div className="flex items-center gap-3">
         <div className="h-8 w-8 rounded-lg bg-ink-100 animate-pulse" />
         <div className="space-y-1.5">
@@ -82,12 +76,16 @@ function SkeletonCard() {
           <div className="h-3 w-16 rounded bg-ink-100 animate-pulse" />
         </div>
       </div>
-      <div className="mt-3 flex gap-2">
-        <div className="h-5 w-28 rounded-full bg-ink-100 animate-pulse" />
-        <div className="h-5 w-20 rounded-full bg-ink-100 animate-pulse" />
-      </div>
     </div>
   );
+}
+
+interface TopPick {
+  race: Race;
+  venueName: string;
+  winPct: number;
+  isFalseFav: boolean;
+  status: string;
 }
 
 export default function Dashboard() {
@@ -97,13 +95,15 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterType>('all');
+  const [sortBy, setSortBy] = useState<SortType>('time');
+  const [searchQuery, setSearchQuery] = useState('');
   const [collapsedMeetings, setCollapsedMeetings] = useState<Set<string>>(new Set());
   const [now, setNow] = useState(new Date());
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [showInsights, setShowInsights] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
   const [activeDate, setActiveDate] = useState<string>('');
 
   useEffect(() => {
@@ -116,7 +116,6 @@ export default function Dashboard() {
     else setRefreshing(true);
     setError(null);
 
-    // Use AEST date, not UTC
     const aestDate = getAESTDate();
 
     const { data: meetingData, error: meetingError } = await supabase
@@ -132,9 +131,8 @@ export default function Dashboard() {
       return;
     }
 
-    let effectiveMeetings: Meeting[] = meetingData as Meeting[] ?? [];
+    let effectiveMeetings: Meeting[] = (meetingData ?? []) as Meeting[];
 
-    // Fallback: if no meetings for today, find the next available date
     if ((meetingData ?? []).length === 0) {
       const { data: futureMeetings } = await supabase
         .from('meetings')
@@ -165,7 +163,7 @@ export default function Dashboard() {
       setActiveDate(aestDate);
     }
 
-    const meetingIds = (effectiveMeetings ?? []).map((m) => m.id);
+    const meetingIds = effectiveMeetings.map((m) => m.id);
     if (meetingIds.length === 0) {
       setMeetings([]);
       setRaces([]);
@@ -206,8 +204,8 @@ export default function Dashboard() {
       }, {} as Record<string, Runner[]>);
     }
 
-    setMeetings(effectiveMeetings as Meeting[]);
-    setRaces(raceData as Race[]);
+    setMeetings(effectiveMeetings);
+    setRaces((raceData ?? []) as Race[]);
     setRunners(runnerMap);
     setLoading(false);
     setRefreshing(false);
@@ -228,24 +226,65 @@ export default function Dashboard() {
     };
   }, [autoRefresh]);
 
-  const meetingGroups: MeetingGroup[] = useMemo(() => {
-    return meetings.map((m) => ({
-      meeting: m,
-      races: races
-        .filter((r) => r.meeting_id === m.id)
-        .filter((r) => {
-          if (filter === 'all') return true;
-          if (filter === 'falsefav') return r.false_fav_flag;
-          if (filter === 'soon') {
-            const status = getRaceStatus(r.start_time, now);
-            return status === 'starting-soon' || status === 'in-progress';
-          }
-          return true;
-        })
-        .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime()),
-    }));
-  }, [meetings, races, filter, now]);
+  // Build a lookup from meetingId → venue name
+  const meetingLookup = useMemo(() => {
+    const map: Record<string, Meeting> = {};
+    meetings.forEach((m) => { map[m.id] = m; });
+    return map;
+  }, [meetings]);
 
+  // Top picks: highest win-pct races, excluding finished
+  const topPicks: TopPick[] = useMemo(() => {
+    return races
+      .filter((r) => getRaceStatus(r.start_time, now) !== 'finished')
+      .map((r) => ({
+        race: r,
+        venueName: meetingLookup[r.meeting_id]?.venue_name ?? '',
+        winPct: toNum(r.probable_winner_win_pct),
+        isFalseFav: r.false_fav_flag,
+        status: getRaceStatus(r.start_time, now),
+      }))
+      .sort((a, b) => b.winPct - a.winPct)
+      .slice(0, 5);
+  }, [races, meetingLookup, now]);
+
+  // Filtered + sorted meeting groups
+  const meetingGroups: MeetingGroup[] = useMemo(() => {
+    const search = searchQuery.trim().toLowerCase();
+
+    return meetings
+      .filter((m) => {
+        if (!search) return true;
+        return (
+          m.venue_name.toLowerCase().includes(search) ||
+          m.venue_code?.toLowerCase().includes(search) ||
+          m.state?.toLowerCase().includes(search)
+        );
+      })
+      .map((m) => ({
+        meeting: m,
+        races: races
+          .filter((r) => r.meeting_id === m.id)
+          .filter((r) => {
+            if (filter === 'all') return true;
+            if (filter === 'falsefav') return r.false_fav_flag;
+            if (filter === 'soon') {
+              const status = getRaceStatus(r.start_time, now);
+              return status === 'starting-soon' || status === 'in-progress';
+            }
+            return true;
+          })
+          .sort((a, b) => {
+            if (sortBy === 'edge') {
+              return toNum(b.probable_winner_win_pct) - toNum(a.probable_winner_win_pct);
+            }
+            return new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
+          }),
+      }))
+      .filter((mg) => mg.races.length > 0 || (filter === 'all' && search === ''));
+  }, [meetings, races, filter, sortBy, searchQuery, now]);
+
+  // Merged metrics
   const totalRaces = races.length;
   const falseFavCount = races.filter((r) => r.false_fav_flag).length;
   const soonCount = races.filter((r) => {
@@ -258,6 +297,27 @@ export default function Dashboard() {
     ? races.reduce((sum, r) => sum + toNum(r.probable_winner_win_pct), 0) / totalRaces
     : 0;
 
+  // Edge calculation
+  let edgeCount = 0;
+  let totalEdge = 0;
+  for (const race of races) {
+    const raceRunners = runners[race.id] ?? [];
+    if (raceRunners.length === 0) continue;
+    const winner = raceRunners.find((r) => r.box === race.probable_winner_box);
+    if (!winner) continue;
+    const modelPct = toNum(winner.win_pct);
+    const price = toNum(winner.price);
+    if (price > 0 && modelPct > 0) {
+      const impliedPct = (1 / price) * 100;
+      const edge = modelPct - impliedPct;
+      if (edge > 3) {
+        edgeCount++;
+        totalEdge += edge;
+      }
+    }
+  }
+  const avgEdge = edgeCount > 0 ? totalEdge / edgeCount : 0;
+
   const toggleMeeting = (id: string) => {
     setCollapsedMeetings((prev) => {
       const next = new Set(prev);
@@ -269,172 +329,219 @@ export default function Dashboard() {
 
   const displayDate = activeDate && activeDate !== getAESTDate()
     ? new Date(activeDate + 'T00:00:00').toLocaleDateString('en-AU', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
       })
     : new Date().toLocaleDateString('en-AU', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
       });
+
+  const metrics = [
+    { label: 'Races', value: totalRaces, icon: Activity, color: 'text-ink-900', iconBg: 'bg-ink-100', iconColor: 'text-ink-500' },
+    { label: 'Meetings', value: meetings.length, icon: MapPin, color: 'text-ink-900', iconBg: 'bg-ink-100', iconColor: 'text-ink-500' },
+    { label: 'Jumping', value: soonCount, icon: Radio, color: soonCount > 0 ? 'text-amber-600' : 'text-ink-900', iconBg: soonCount > 0 ? 'bg-amber-100' : 'bg-ink-100', iconColor: soonCount > 0 ? 'text-amber-600' : 'text-ink-500', live: soonCount > 0 },
+    { label: 'High Conf', value: highConfidenceCount, icon: TrendingUp, color: highConfidenceCount > 0 ? 'text-green-600' : 'text-ink-900', iconBg: highConfidenceCount > 0 ? 'bg-green-100' : 'bg-ink-100', iconColor: highConfidenceCount > 0 ? 'text-green-600' : 'text-ink-500' },
+    { label: 'False Favs', value: falseFavCount, icon: AlertTriangle, color: falseFavCount > 0 ? 'text-amber-600' : 'text-ink-900', iconBg: falseFavCount > 0 ? 'bg-amber-100' : 'bg-ink-100', iconColor: falseFavCount > 0 ? 'text-amber-600' : 'text-ink-500' },
+    { label: 'Avg Pick', value: `${avgWinPct.toFixed(0)}%`, icon: Flame, color: 'text-ink-900', iconBg: 'bg-ink-100', iconColor: 'text-ink-500' },
+  ];
 
   return (
     <div className="flex min-h-screen flex-col bg-ink-50">
       <Nav />
 
-      {/* Hero banner */}
-      <div className="relative h-36 overflow-hidden sm:h-48">
-        <img src={HERO_IMG} alt="Greyhound racing" className="h-full w-full object-cover" />
-        <div className="absolute inset-0 hero-overlay" />
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute -right-10 top-4 h-32 w-32 rounded-full bg-amber-500/10 blur-3xl animate-float" />
-        </div>
-        <div className="relative mx-auto flex h-full max-w-6xl flex-col justify-center px-4">
-          <div className="flex items-center gap-2 text-amber-400 mb-1 animate-fadeIn">
-            <Calendar className="h-4 w-4" />
-            <span className="mono text-sm font-medium">{displayDate}</span>
-          </div>
-          <h1 className="font-display text-3xl tracking-wide text-ink-50 sm:text-5xl animate-fadeInUp">
-            TODAY'S RACES
-          </h1>
-          <p className="mt-1 text-sm text-ink-200 animate-fadeInUp stagger-1">
-            {totalRaces} races · {meetings.length} meetings · {totalRunners} runners analyzed
-          </p>
-        </div>
-        <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-b from-transparent to-ink-50" />
-      </div>
+      <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-4">
+        {/* Functional header — date, live/refresh, search, sort */}
+        <div className="mb-4 animate-fadeIn">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h1 className="font-display text-3xl tracking-wide text-ink-900">TODAY'S RACES</h1>
+              <p className="mono mt-0.5 text-sm text-ink-400">{displayDate}</p>
+            </div>
 
-      <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">
-        {/* Model pipeline + activity feed */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setAutoRefresh(!autoRefresh)}
+                className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all ${
+                  autoRefresh
+                    ? 'bg-green-50 text-green-600 border border-green-200 shadow-sm'
+                    : 'bg-ink-100 text-ink-500 border border-ink-200'
+                }`}
+              >
+                <Radio className={`h-4 w-4 ${autoRefresh ? 'animate-pulseSubtle' : ''}`} />
+                <span>{autoRefresh ? 'Live' : 'Paused'}</span>
+              </button>
+              <button
+                onClick={() => fetchData(true)}
+                className="btn-secondary text-sm"
+                disabled={refreshing}
+              >
+                <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline">Refresh</span>
+              </button>
+              {lastRefresh && (
+                <span className="mono text-xs text-ink-400 hidden md:inline">
+                  Updated {lastRefresh.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Merged metrics strip — clickable to expand insights */}
         {!loading && totalRaces > 0 && (
-          <div className="mb-6 animate-fadeInUp">
-            <ModelStatus />
-          </div>
-        )}
+          <>
+            <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6 animate-fadeInUp">
+              {metrics.map((m, i) => (
+                <button
+                  key={m.label}
+                  onClick={() => m.label === 'Avg Pick' || m.label === 'High Conf' || m.label === 'False Favs' ? setShowInsights(!showInsights) : undefined}
+                  className={`stat-card text-left animate-fadeInUp stagger-${Math.min(i + 1, 6)} group ${showInsights && (m.label === 'Avg Pick' || m.label === 'High Conf' || m.label === 'False Favs') ? 'ring-2 ring-amber-300' : ''}`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">{m.label}</p>
+                      <p className={`mono mt-1 text-2xl font-bold ${m.color} transition-transform group-hover:scale-110 origin-left`}>
+                        {m.value}
+                      </p>
+                    </div>
+                    <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${m.iconBg} transition-colors`}>
+                      <m.icon className={`h-4 w-4 ${m.iconColor} transition-colors`} />
+                    </div>
+                  </div>
+                  {m.live && <div className="dog-track mt-2" />}
+                </button>
+              ))}
+            </div>
 
-        {/* Control bar */}
-        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setAutoRefresh(!autoRefresh)}
-              className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all ${
-                autoRefresh
-                  ? 'bg-green-50 text-green-600 border border-green-200 shadow-sm'
-                  : 'bg-ink-100 text-ink-500 border border-ink-200'
-              }`}
-            >
-              <Radio className={`h-4 w-4 ${autoRefresh ? 'animate-pulseSubtle' : ''}`} />
-              <span>{autoRefresh ? 'Live' : 'Paused'}</span>
-            </button>
-            <button
-              onClick={() => fetchData(true)}
-              className="btn-secondary text-sm"
-              disabled={refreshing}
-            >
-              <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-              <span className="hidden sm:inline">Refresh</span>
-            </button>
-            {lastRefresh && (
-              <span className="mono text-xs text-ink-400 hidden md:inline">
-                Updated {lastRefresh.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-              </span>
+            {/* Expandable insights detail */}
+            {showInsights && (
+              <div className="mb-4 card p-4 animate-slideDown">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  {/* Model Edge */}
+                  <div className="rounded-xl border border-ink-100 bg-ink-50/50 p-3">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100">
+                        <Flame className="h-3.5 w-3.5 text-amber-600" />
+                      </div>
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Model Edge</span>
+                    </div>
+                    <p className="mono text-xl font-bold text-amber-600">+{avgEdge.toFixed(1)}%</p>
+                    <p className="text-[10px] text-ink-400 mt-0.5">{edgeCount} races with edge {'>'} 3%</p>
+                  </div>
+
+                  {/* Confidence distribution */}
+                  <div className="rounded-xl border border-ink-100 bg-ink-50/50 p-3">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-green-100">
+                        <TrendingUp className="h-3.5 w-3.5 text-green-600" />
+                      </div>
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-400">Confidence Distribution</span>
+                    </div>
+                    <div className="flex h-5 w-full overflow-hidden rounded-lg bg-ink-100">
+                      <div className="h-full bg-green-500 transition-all duration-1000" style={{ width: `${totalRaces > 0 ? (highConfidenceCount / totalRaces) * 100 : 0}%` }} />
+                      <div className="h-full bg-ink-400 transition-all duration-1000" style={{ width: `${totalRaces > 0 ? (races.filter((r) => r.confidence === 'Medium').length / totalRaces) * 100 : 0}%` }} />
+                      <div className="h-full bg-ink-200 transition-all duration-1000" style={{ width: `${totalRaces > 0 ? (races.filter((r) => r.confidence === 'Low').length / totalRaces) * 100 : 0}%` }} />
+                    </div>
+                    <div className="mt-1.5 flex items-center gap-3 text-[10px] text-ink-400">
+                      <div className="flex items-center gap-1"><div className="h-2 w-2 rounded bg-green-500" /><span>HIGH ({highConfidenceCount})</span></div>
+                      <div className="flex items-center gap-1"><div className="h-2 w-2 rounded bg-ink-400" /><span>MED</span></div>
+                      <div className="flex items-center gap-1"><div className="h-2 w-2 rounded bg-ink-200" /><span>LOW</span></div>
+                    </div>
+                  </div>
+
+                  {/* False favourites detail */}
+                  <div className="rounded-xl border border-ink-100 bg-ink-50/50 p-3">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100">
+                        <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
+                      </div>
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-400">False Favourites</span>
+                    </div>
+                    <p className="mono text-xl font-bold text-amber-600">{falseFavCount}</p>
+                    <p className="text-[10px] text-ink-400 mt-0.5">Market overvalued runners flagged</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowInsights(false)}
+                  className="btn-ghost mt-3 text-xs"
+                >
+                  <ChevronDown className="h-3 w-3" />
+                  Collapse
+                </button>
+              </div>
             )}
-          </div>
-        </div>
-
-        {/* Animated stat cards */}
-        {!loading && totalRaces > 0 && (
-          <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-            <div className="stat-card animate-fadeInUp stagger-1 group">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">Races</p>
-                  <p className="mono mt-1 text-2xl font-bold text-ink-900 transition-transform group-hover:scale-110 origin-left">{totalRaces}</p>
-                </div>
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-ink-100 group-hover:bg-amber-100 transition-colors">
-                  <Activity className="h-4 w-4 text-ink-500 group-hover:text-amber-600 transition-colors" />
-                </div>
-              </div>
-            </div>
-            <div className="stat-card animate-fadeInUp stagger-2 group">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">Meetings</p>
-                  <p className="mono mt-1 text-2xl font-bold text-ink-900 transition-transform group-hover:scale-110 origin-left">{meetings.length}</p>
-                </div>
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-ink-100 group-hover:bg-amber-100 transition-colors">
-                  <MapPin className="h-4 w-4 text-ink-500 group-hover:text-amber-600 transition-colors" />
-                </div>
-              </div>
-            </div>
-            <div className="stat-card animate-fadeInUp stagger-3 group relative">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">Jumping</p>
-                  <p className={`mono mt-1 text-2xl font-bold transition-transform group-hover:scale-110 origin-left ${soonCount > 0 ? 'text-amber-600' : 'text-ink-900'}`}>
-                    {soonCount}
-                  </p>
-                </div>
-                <div className={`flex h-9 w-9 items-center justify-center rounded-lg transition-all ${soonCount > 0 ? 'bg-amber-100 animate-glow' : 'bg-ink-100'}`}>
-                  <Radio className={`h-4 w-4 ${soonCount > 0 ? 'text-amber-600' : 'text-ink-500'}`} />
-                </div>
-              </div>
-              {soonCount > 0 && <div className="dog-track mt-2" />}
-            </div>
-            <div className="stat-card animate-fadeInUp stagger-4 group">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">High Conf</p>
-                  <p className={`mono mt-1 text-2xl font-bold transition-transform group-hover:scale-110 origin-left ${highConfidenceCount > 0 ? 'text-green-600' : 'text-ink-900'}`}>
-                    {highConfidenceCount}
-                  </p>
-                </div>
-                <div className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors ${highConfidenceCount > 0 ? 'bg-green-100' : 'bg-ink-100'}`}>
-                  <TrendingUp className={`h-4 w-4 ${highConfidenceCount > 0 ? 'text-green-600' : 'text-ink-500'}`} />
-                </div>
-              </div>
-            </div>
-            <div className="stat-card animate-fadeInUp stagger-5 group">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">False Favs</p>
-                  <p className={`mono mt-1 text-2xl font-bold transition-transform group-hover:scale-110 origin-left ${falseFavCount > 0 ? 'text-amber-600' : 'text-ink-900'}`}>
-                    {falseFavCount}
-                  </p>
-                </div>
-                <div className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors ${falseFavCount > 0 ? 'bg-amber-100' : 'bg-ink-100'}`}>
-                  <AlertTriangle className={`h-4 w-4 ${falseFavCount > 0 ? 'text-amber-600' : 'text-ink-500'}`} />
-                </div>
-              </div>
-            </div>
-            <div className="stat-card animate-fadeInUp stagger-6 group">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">Avg Pick</p>
-                  <p className="mono mt-1 text-2xl font-bold text-ink-900 transition-transform group-hover:scale-110 origin-left">
-                    {avgWinPct.toFixed(0)}<span className="text-base text-ink-400">%</span>
-                  </p>
-                </div>
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-ink-100 group-hover:bg-amber-100 transition-colors">
-                  <Flame className="h-4 w-4 text-ink-500 group-hover:text-amber-600 transition-colors" />
-                </div>
-              </div>
-            </div>
-          </div>
+          </>
         )}
 
-        {/* Model insights — edge detection */}
-        {!loading && totalRaces > 0 && (
-          <div className="mb-6 animate-fadeInUp stagger-2">
-            <ModelInsights races={races} runners={runners} />
+        {/* Top Picks module */}
+        {!loading && totalRaces > 0 && topPicks.length > 0 && (
+          <div className="mb-6 animate-fadeInUp stagger-1">
+            <div className="mb-2 flex items-center gap-2">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500 shadow-sm">
+                <Flame className="h-4 w-4 text-ink-900" />
+              </div>
+              <h2 className="font-display text-lg tracking-wide text-ink-900">TOP PICKS</h2>
+              <span className="mono text-xs text-ink-400">Highest model confidence</span>
+            </div>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
+              {topPicks.map((pick, idx) => {
+                const status = getRaceStatus(pick.race.start_time, now);
+                const isLive = status === 'starting-soon' || status === 'in-progress';
+                return (
+                  <Link
+                    key={pick.race.id}
+                    to={`/race/${pick.race.id}`}
+                    className={`card card-hover p-3 group animate-fadeInUp stagger-${Math.min(idx + 1, 5)} ${
+                      isLive ? 'ring-1 ring-amber-300/40' : ''
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="mono text-xs text-ink-400">
+                        {pick.venueName} · R{pick.race.race_number}
+                      </span>
+                      <span className="mono text-lg font-bold text-ink-900">
+                        {fmtPct(pick.race.probable_winner_win_pct, 0)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="mono inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded bg-ink-900 text-[10px] font-bold text-ink-50">
+                        {pick.race.probable_winner_box}
+                      </span>
+                      <span className="truncate text-sm font-semibold text-ink-900 group-hover:text-amber-600 transition-colors">
+                        {pick.race.probable_winner_name}
+                      </span>
+                    </div>
+                    <div className="mt-2 flex items-center gap-1.5">
+                      {pick.race.confidence && (
+                        <span className={`badge text-[10px] ${
+                          pick.race.confidence === 'High' ? 'bg-green-100 text-green-700' :
+                          pick.race.confidence === 'Medium' ? 'bg-ink-100 text-ink-600' :
+                          'bg-ink-50 text-ink-400'
+                        }`}>
+                          {pick.race.confidence === 'High' ? 'HIGH' : pick.race.confidence === 'Medium' ? 'MED' : 'LOW'}
+                        </span>
+                      )}
+                      {pick.isFalseFav && (
+                        <span className="badge text-[10px] bg-amber-100 text-amber-700">
+                          <AlertTriangle className="h-2.5 w-2.5" />
+                          FF
+                        </span>
+                      )}
+                      {isLive && (
+                        <span className="badge text-[10px] bg-amber-50 text-amber-600">
+                          <Radio className="h-2.5 w-2.5 animate-pulseSubtle" />
+                          LIVE
+                        </span>
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
         )}
 
         {/* Disclaimer */}
-        <div className="mb-6 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 animate-fadeIn">
+        <div className="mb-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 animate-fadeIn">
           <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
           <span>
             <span className="font-semibold">Model output — not financial or betting advice.</span>{' '}
@@ -442,52 +549,81 @@ export default function Dashboard() {
           </span>
         </div>
 
-        {/* Filters */}
-        <div className="mb-6 flex items-center gap-2">
-          <Filter className="h-4 w-4 text-ink-400" />
-          <div className="flex gap-1 rounded-lg bg-ink-100 p-1">
-            <button
-              onClick={() => setFilter('all')}
-              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all ${
-                filter === 'all' ? 'bg-white text-ink-900 shadow-sm' : 'text-ink-500 hover:text-ink-700'
-              }`}
-            >
-              All
-            </button>
-            <button
-              onClick={() => setFilter('soon')}
-              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all ${
-                filter === 'soon' ? 'bg-white text-ink-900 shadow-sm' : 'text-ink-500 hover:text-ink-700'
-              }`}
-            >
-              <Zap className="h-3.5 w-3.5" />
-              Jumping Soon
-              {soonCount > 0 && (
-                <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-amber-500 px-1 text-xs font-bold text-ink-900 animate-scaleIn">
-                  {soonCount}
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() => setFilter('falsefav')}
-              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all ${
-                filter === 'falsefav' ? 'bg-white text-ink-900 shadow-sm' : 'text-ink-500 hover:text-ink-700'
-              }`}
-            >
-              <AlertTriangle className="h-3.5 w-3.5" />
-              False-Fav
-              {falseFavCount > 0 && (
-                <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-amber-100 px-1 text-xs font-bold text-amber-700 animate-scaleIn">
-                  {falseFavCount}
-                </span>
-              )}
-            </button>
+        {/* Search + Sort + Filter bar */}
+        {!loading && totalRaces > 0 && (
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between animate-fadeIn">
+            {/* Search */}
+            <div className="relative flex-1 max-w-xs">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search venue..."
+                className="input-field pl-9 py-2 text-sm"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              {/* Sort toggle */}
+              <button
+                onClick={() => setSortBy(sortBy === 'time' ? 'edge' : 'time')}
+                className="flex items-center gap-1.5 rounded-lg border border-ink-200 bg-white px-3 py-2 text-sm font-medium text-ink-600 transition-all hover:bg-ink-50"
+              >
+                <ArrowUpDown className="h-3.5 w-3.5" />
+                {sortBy === 'time' ? 'By time' : 'By edge %'}
+              </button>
+
+              {/* Filter */}
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-ink-400" />
+                <div className="flex gap-1 rounded-lg bg-ink-100 p-1">
+                  <button
+                    onClick={() => setFilter('all')}
+                    className={`rounded-md px-3 py-1.5 text-sm font-medium transition-all ${
+                      filter === 'all' ? 'bg-white text-ink-900 shadow-sm' : 'text-ink-500 hover:text-ink-700'
+                    }`}
+                  >
+                    All
+                  </button>
+                  <button
+                    onClick={() => setFilter('soon')}
+                    className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all ${
+                      filter === 'soon' ? 'bg-white text-ink-900 shadow-sm' : 'text-ink-500 hover:text-ink-700'
+                    }`}
+                  >
+                    Jumping
+                    {soonCount > 0 && (
+                      <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-amber-500 px-1 text-xs font-bold text-ink-900 animate-scaleIn">
+                        {soonCount}
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setFilter('falsefav')}
+                    className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all ${
+                      filter === 'falsefav' ? 'bg-white text-ink-900 shadow-sm' : 'text-ink-500 hover:text-ink-700'
+                    }`}
+                  >
+                    <AlertTriangle className="h-3.5 w-3.5" />
+                    FF
+                    {falseFavCount > 0 && (
+                      <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-amber-100 px-1 text-xs font-bold text-amber-700 animate-scaleIn">
+                        {falseFavCount}
+                      </span>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Content */}
         {loading ? (
-          <ScanningLoader />
+          <div className="space-y-3">
+            {[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}
+          </div>
         ) : error ? (
           <div className="card border-red-200 p-6 text-center text-red-600">
             <AlertCircle className="mx-auto mb-3 h-8 w-8 text-red-400" />
@@ -501,7 +637,7 @@ export default function Dashboard() {
             <p className="mt-1 text-sm text-ink-400">The model is waiting for race data to be published.</p>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-4">
             {meetingGroups.map(({ meeting, races: meetingRaces }, mIdx) => {
               if (meetingRaces.length === 0 && filter !== 'all') return null;
               const isCollapsed = collapsedMeetings.has(meeting.id);
@@ -510,53 +646,53 @@ export default function Dashboard() {
 
               return (
                 <div key={meeting.id} className={`animate-fadeInUp stagger-${Math.min(mIdx + 1, 8)}`}>
-                  {/* Meeting header */}
-                  <button
-                    onClick={() => toggleMeeting(meeting.id)}
-                    className="group mb-3 flex w-full items-center gap-3 rounded-xl border border-ink-200 bg-white p-3 shadow-sm transition-all hover:shadow-md hover:border-amber-300"
-                  >
-                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-ink-900 text-ink-50 transition-transform group-hover:scale-110 group-hover:bg-amber-500">
-                      {isCollapsed ? (
-                        <ChevronRight className="h-5 w-5" />
-                      ) : (
-                        <ChevronDown className="h-5 w-5" />
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-ink-400 group-hover:text-amber-500 transition-colors flex-shrink-0" />
-                        <h2 className="font-display text-lg tracking-wide text-ink-900 group-hover:text-amber-600 transition-colors truncate">
+                  {/* Sticky meeting header */}
+                  <div className="sticky top-[57px] z-20 -mx-1 px-1 py-1">
+                    <button
+                      onClick={() => toggleMeeting(meeting.id)}
+                      className="group flex w-full items-center gap-3 rounded-xl border border-ink-300 bg-ink-900 p-3 shadow-md transition-all hover:border-amber-500 hover:shadow-lg"
+                    >
+                      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-ink-800 text-ink-50 transition-transform group-hover:scale-110 group-hover:bg-amber-500 group-hover:text-ink-900">
+                        {isCollapsed ? (
+                          <ChevronRight className="h-5 w-5" />
+                        ) : (
+                          <ChevronDown className="h-5 w-5" />
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <MapPin className="h-4 w-4 text-amber-400 flex-shrink-0" />
+                        <h2 className="font-display text-lg tracking-wide text-ink-50 group-hover:text-amber-400 transition-colors truncate">
                           {meeting.venue_name}
                         </h2>
+                        <span className="badge bg-ink-800 text-ink-300 flex-shrink-0">{meeting.state}</span>
+                        <span className="mono text-sm text-ink-400 hidden sm:inline">{meeting.venue_code}</span>
                       </div>
-                      <span className="badge bg-ink-100 text-ink-500 flex-shrink-0">{meeting.state}</span>
-                      <span className="mono text-sm text-ink-400 hidden sm:inline">{meeting.venue_code}</span>
-                    </div>
-                    <div className="hidden sm:flex items-center gap-2">
-                      {meetingHighConf > 0 && (
-                        <span className="badge bg-green-50 text-green-600 border border-green-200">
-                          <TrendingUp className="h-3 w-3" />
-                          {meetingHighConf} High
+                      <div className="hidden sm:flex items-center gap-2">
+                        {meetingHighConf > 0 && (
+                          <span className="badge bg-green-900/40 text-green-400 border border-green-800">
+                            <TrendingUp className="h-3 w-3" />
+                            {meetingHighConf} HIGH
+                          </span>
+                        )}
+                        {meetingFalseFav > 0 && (
+                          <span className="badge bg-amber-900/40 text-amber-400 border border-amber-800">
+                            <AlertTriangle className="h-3 w-3" />
+                            {meetingFalseFav} FF
+                          </span>
+                        )}
+                        <span className="mono text-sm text-ink-400 flex-shrink-0">
+                          {meetingRaces.length} race{meetingRaces.length !== 1 ? 's' : ''}
                         </span>
-                      )}
-                      {meetingFalseFav > 0 && (
-                        <span className="badge bg-amber-50 text-amber-600 border border-amber-200">
-                          <AlertTriangle className="h-3 w-3" />
-                          {meetingFalseFav} FF
-                        </span>
-                      )}
-                      <span className="mono text-sm text-ink-400 flex-shrink-0">
-                        {meetingRaces.length} race{meetingRaces.length !== 1 ? 's' : ''}
+                      </div>
+                      <span className="mono text-sm text-ink-400 sm:hidden flex-shrink-0">
+                        {meetingRaces.length}
                       </span>
-                    </div>
-                    <span className="mono text-sm text-ink-400 sm:hidden flex-shrink-0">
-                      {meetingRaces.length}
-                    </span>
-                  </button>
+                    </button>
+                  </div>
 
                   {/* Races */}
                   {!isCollapsed && (
-                    <div className="space-y-3 animate-slideDown">
+                    <div className="mt-3 space-y-3 animate-slideDown">
                       {meetingRaces.length === 0 ? (
                         <p className="py-4 text-center text-sm text-ink-400">
                           No races match this filter.

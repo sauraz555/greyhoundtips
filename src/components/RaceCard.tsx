@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ChevronDown, AlertTriangle, ExternalLink, Clock, Layers, Zap,
-  TrendingUp, Flame, Gauge, Brain, Target, ArrowRight,
+  Gauge, Target, ArrowRight, Flame,
 } from 'lucide-react';
 import type { Race, Runner } from '@/types/database';
 import {
   getRaceStatus, formatCountdown, formatPostTime,
-  confidenceColor, confidenceBadge, toNum, fmtPct, fmtPrice,
+  confidenceBadge, toNum, fmtPct, fmtPrice,
   type RaceStatus,
 } from '@/lib/raceUtils';
 import RunnerTable from './RunnerTable';
@@ -39,7 +39,6 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
   const isStartingSoon = status === 'starting-soon';
 
   const cardOpacity = isFinished ? 'opacity-50' : '';
-  const borderClass = confidenceColor(race.confidence);
   const winnerPct = toNum(race.probable_winner_win_pct);
 
   const sortedRunners = [...runners].sort((a, b) => toNum(b.win_pct) - toNum(a.win_pct));
@@ -64,9 +63,7 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
       : '';
 
   return (
-    <div
-      className={`card border-l-4 ${borderClass} ${cardOpacity} ${statusGlow} card-hover transition-all duration-300`}
-    >
+    <div className={`card ${cardOpacity} ${statusGlow} card-hover transition-all duration-300`}>
       {/* Compact header */}
       <button
         onClick={() => setExpanded(!expanded)}
@@ -94,29 +91,19 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
                 {race.probable_winner_box}
               </span>
               <span className="truncate font-semibold text-ink-900">{race.probable_winner_name}</span>
-              {race.probable_winner_win_pct != null && (
-                <span className="mono text-sm font-bold text-amber-600 whitespace-nowrap">
-                  {fmtPct(race.probable_winner_win_pct)}
-                </span>
-              )}
             </div>
           )}
-          {race.probable_winner_win_pct != null && (
-            <div className="mt-1.5 h-2 w-full max-w-[220px] overflow-hidden rounded-full bg-ink-100">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500 transition-all duration-1000 ease-out"
-                style={{ width: `${winnerPct}%` }}
-              />
-            </div>
-          )}
+          <div className="mt-1 flex items-center gap-2">
+            {race.probable_winner_win_pct != null && (
+              <span className="mono text-lg font-bold text-ink-900">
+                {fmtPct(race.probable_winner_win_pct, 0)}
+              </span>
+            )}
+            {race.confidence && (
+              <span className={`badge ${confBadge.classes}`}>{confBadge.label}</span>
+            )}
+          </div>
         </div>
-
-        {/* Confidence badge */}
-        {race.confidence && (
-          <span className={`badge hidden flex-shrink-0 sm:inline-flex ${confBadge.classes}`}>
-            {confBadge.label}
-          </span>
-        )}
 
         {/* Timer */}
         <div className="flex-shrink-0 text-right">
@@ -159,9 +146,6 @@ export default function RaceCard({ race, runners, defaultExpanded = false }: Pro
         )}
         {isFinished && (
           <span className="badge bg-ink-100 text-ink-400">Completed</span>
-        )}
-        {race.confidence && (
-          <span className={`badge sm:hidden ${confBadge.classes}`}>{confBadge.label}</span>
         )}
         {/* Runner count + field avg */}
         <div className="flex items-center gap-2 text-xs text-ink-400">
