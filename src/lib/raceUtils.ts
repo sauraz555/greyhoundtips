@@ -1,10 +1,13 @@
 export type RaceStatus = 'upcoming' | 'starting-soon' | 'in-progress' | 'finished';
 
 export function getAESTDate(date: Date = new Date()): string {
-  const aestTime = new Date(date.toLocaleString('en-US', { timeZone: 'Australia/Sydney' }));
-  const year = aestTime.getFullYear();
-  const month = String(aestTime.getMonth() + 1).padStart(2, '0');
-  const day = String(aestTime.getDate()).padStart(2, '0');
+  const sydneyStr = date.toLocaleString('en-AU', {
+    timeZone: 'Australia/Sydney',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  const [day, month, year] = sydneyStr.split('/');
   return `${year}-${month}-${day}`;
 }
 

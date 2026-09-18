@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ChevronDown, ChevronRight, AlertCircle, Filter, RefreshCw, MapPin, Radio,
@@ -114,7 +114,7 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  const fetchData = async (silent = false) => {
+  const fetchData = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     else setRefreshing(true);
     setError(null);
@@ -213,11 +213,11 @@ export default function Dashboard() {
     setLoading(false);
     setRefreshing(false);
     setLastRefresh(new Date());
-  };
+  }, []);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   useEffect(() => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -227,7 +227,7 @@ export default function Dashboard() {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [autoRefresh]);
+  }, [autoRefresh, fetchData]);
 
   // Build a lookup from meetingId → venue name
   const meetingLookup = useMemo(() => {
