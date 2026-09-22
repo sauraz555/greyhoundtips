@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { PawPrint, Check, AlertCircle, Loader2, Sparkles, Zap, TrendingUp } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { isSubscriptionActive, isProfileInTrial, getProfileTrialDaysLeft } from '@/lib/subscription';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import SEO from '@/components/SEO';
@@ -10,7 +11,7 @@ import SEO from '@/components/SEO';
 const PRICE_ID = 'price_1UGdvdK5ffGf1vlHcnVqKF3o';
 
 export default function Subscribe() {
-  const { user, subscription, refreshSubscription } = useAuth();
+  const { user, profile, subscription, refreshSubscription } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
@@ -64,12 +65,13 @@ export default function Subscribe() {
     }
   };
 
-  const trialEnd = subscription?.trial_end ? new Date(Number(subscription.trial_end) * 1000) : null;
-  const daysLeft = trialEnd
-    ? Math.max(0, Math.ceil((trialEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
-    : 0;
+  const profileTrialActive = isProfileInTrial(profile?.created_at);
+  const profileTrialDaysLeft = getProfileTrialDaysLeft(profile?.created_at);
+  const isStripeTrial = subscription?.status === 'trialing';
 
-  const isActive = subscription?.status === 'trialing' || subscription?.status === 'active' || subscription?.status === 'past_due';
+  const isTrialActive = profileTrialActive || isStripeTrial;
+  
+  const isActive = isSubscriptionActive(subscription?.status, profile?.created_at);
 
   return (
     <div className="flex min-h-screen flex-col bg-ink-50">
@@ -101,12 +103,12 @@ export default function Subscribe() {
                 <Check className="h-8 w-8 text-green-600" strokeWidth={2.5} />
               </div>
               <h1 className="font-display text-2xl tracking-wide text-ink-900">
-                {subscription?.status === 'trialing' ? 'TRIAL ACTIVE' : 'SUBSCRIPTION ACTIVE'}
+                {isTrialActive ? 'TRIAL ACTIVE' : 'SUBSCRIPTION ACTIVE'}
               </h1>
-              {subscription?.status === 'trialing' && trialEnd && (
+              {isTrialActive && (
                 <p className="mt-2 text-ink-500">
-                  {daysLeft > 0
-                    ? `${daysLeft} day${daysLeft === 1 ? '' : 's'} left in your free trial.`
+                  {isStripeTrial || profileTrialDaysLeft > 0
+                    ? `1 day left in your free trial.`
                     : 'Your trial ends today.'}
                 </p>
               )}

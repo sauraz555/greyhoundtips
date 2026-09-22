@@ -1,9 +1,10 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { PawPrint, LayoutDashboard, UserCircle, LogOut, Sparkles } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { isSubscriptionActive, isProfileInTrial } from '@/lib/subscription';
 
 export default function Nav() {
-  const { user, subscription, signOut } = useAuth();
+  const { user, profile, subscription, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -14,7 +15,7 @@ export default function Nav() {
 
   const isActive = (path: string) => location.pathname === path;
 
-  const isTrialing = subscription?.status === 'trialing';
+  const isTrialing = subscription?.status === 'trialing' || isProfileInTrial(profile?.created_at);
   const isPaid = subscription?.status === 'active' || subscription?.status === 'past_due';
 
   return (

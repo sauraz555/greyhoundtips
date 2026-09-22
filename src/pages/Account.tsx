@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Mail, LogOut, Trash2, AlertCircle, Shield, CreditCard, ExternalLink, Loader2, Bell, Check } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { isSubscriptionActive, isProfileInTrial, getProfileTrialDaysLeft } from '@/lib/subscription';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 
@@ -109,11 +110,17 @@ export default function Account() {
     setTimeout(() => setEmailSaved(false), 3000);
   };
 
-  const isActive = subscription?.status === 'trialing' || subscription?.status === 'active' || subscription?.status === 'past_due';
+  const profileTrialActive = isProfileInTrial(profile?.created_at);
+  const profileTrialDaysLeft = getProfileTrialDaysLeft(profile?.created_at);
+  const isStripeTrial = subscription?.status === 'trialing';
+
+  const isTrialActive = profileTrialActive || isStripeTrial;
+  const isActive = isSubscriptionActive(subscription?.status, profile?.created_at);
+  
   const trialEnd = subscription?.trial_end ? new Date(Number(subscription.trial_end) * 1000) : null;
-  const daysLeft = trialEnd
-    ? Math.max(0, Math.ceil((trialEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
-    : 0;
+  const daysLeft = isStripeTrial 
+    ? (trialEnd ? Math.max(0, Math.ceil((trialEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0)
+    : profileTrialDaysLeft;
   const periodEnd = subscription?.current_period_end ? new Date(Number(subscription.current_period_end) * 1000) : null;
 
   return (
@@ -171,7 +178,7 @@ export default function Account() {
                 <p className="text-sm text-ink-400">Subscription</p>
                 <p className="font-semibold text-ink-900">
                   {isActive
-                    ? subscription?.status === 'trialing'
+                    ? isTrialActive
                       ? `Free trial — ${daysLeft} day${daysLeft === 1 ? '' : 's'} left`
                       : 'Active — $25/month'
                     : 'No active subscription'}
@@ -181,7 +188,7 @@ export default function Account() {
 
             {isActive && (
               <div className="mt-4 space-y-2 border-t border-ink-100 pt-4 text-sm text-ink-500">
-                {subscription?.status === 'trialing' && trialEnd && (
+                {isStripeTrial && trialEnd && (
                   <div className="flex justify-between">
                     <span>Trial ends</span>
                     <span className="mono font-medium text-ink-700">

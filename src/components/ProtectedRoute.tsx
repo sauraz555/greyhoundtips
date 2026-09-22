@@ -1,13 +1,10 @@
 import { Navigate } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { useAuth } from '@/context/AuthContext';
-
-function isSubscriptionActive(status: string | undefined): boolean {
-  return status === 'trialing' || status === 'active' || status === 'past_due';
-}
+import { isSubscriptionActive } from '@/lib/subscription';
 
 export default function ProtectedRoute({ children }: { children: ReactNode }) {
-  const { session, subscription, loading } = useAuth();
+  const { session, profile, subscription, loading } = useAuth();
 
   if (loading) {
     return (
@@ -21,7 +18,9 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
     return <Navigate to="/login" replace />;
   }
 
-  if (!isSubscriptionActive(subscription?.status)) {
+  const hasActiveSubscription = isSubscriptionActive(subscription?.status, profile?.created_at);
+
+  if (!hasActiveSubscription) {
     return <Navigate to="/subscribe" replace />;
   }
 
